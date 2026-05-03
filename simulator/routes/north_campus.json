@@ -1,0 +1,50 @@
+{
+  "route_id": "1",
+  "route_name": "North Campus Loop",
+  "loop": true,
+  "waypoints": [
+    {
+      "id": 1,
+      "name": "Main Gate",
+      "lat": 13.0494,
+      "lng": 80.0249,
+      "is_stop": true,
+      "stop_dwell_seconds": 30,
+      "speed_zone_kmh": 20
+    },
+    {
+      "id": 2,
+      "name": "Library Bend",
+      "lat": 13.0490,
+      "lng": 80.0255,
+      "is_stop": false,
+      "speed_zone_kmh": 15
+    },
+    {
+      "id": 3,
+      "name": "Central Library",
+      "lat": 13.0485,
+      "lng": 80.0260,
+      "is_stop": true,
+      "stop_dwell_seconds": 45,
+      "speed_zone_kmh": 15
+    },
+    {
+      "id": 4,
+      "name": "Admin Junction",
+      "lat": 13.0475,
+      "lng": 80.0250,
+      "is_stop": false,
+      "speed_zone_kmh": 20
+    },
+    {
+      "id": 5,
+      "name": "North Hostel",
+      "lat": 13.0480,
+      "lng": 80.0240,
+      "is_stop": true,
+      "stop_dwell_seconds": 40,
+      "speed_zone_kmh": 10
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "stop_id": "RIT-GATE",
+    "name": "Main Gate",
+    "short_name": "Gate",
+    "lat": 13.0097,
+    "lng": 80.0040,
+    "type": "gate",
+    "icon": "🚪",
+    "color": "#E63946"
+  },
+  {
+    "stop_id": "RIT-ADMIN",
+    "name": "Admin Block",
+    "short_name": "Admin",
+    "lat": 13.0108,
+    "lng": 80.0024,
+    "type": "building",
+    "icon": "🏛️",
+    "color": "#1B263B"
+  },
+  {
+    "stop_id": "RIT-MAIN",
+    "name": "Main Block",
+    "short_name": "Main Block",
+    "lat": 13.0127,
+    "lng": 80.0024,
+    "type": "building",
+    "icon": "🏫",
+    "color": "#1B263B"
+  },
+  {
+    "stop_id": "RIT-NGATE",
+    "name": "North Gate",
+    "short_name": "N. Gate",
+    "lat": 13.0165,
+    "lng": 80.0036,
+    "type": "gate",
+    "icon": "🚪",
+    "color": "#E63946"
+  },
+  {
+    "stop_id": "RIT-SJB-N",
+    "name": "Steve Jobs Block",
+    "short_name": "Steve Jobs",
+    "lat": 13.0160,
+    "lng": 80.0049,
+    "type": "building",
+    "icon": "💻",
+    "color": "#1B263B"
+  },
+  {
+    "stop_id": "RIT-SJB-E",
+    "name": "Steve Jobs — East",
+    "short_name": "SJB East",
+    "lat": 13.0135,
+    "lng": 80.0058,
+    "type": "building",
+    "icon": "💻",
+    "color": "#1B263B"
+  },
+  {
+    "stop_id": "RIT-CENT",
+    "name": "Central Block",
+    "short_name": "Central",
+    "lat": 13.0115,
+    "lng": 80.0055,
+    "type": "building",
+    "icon": "🏢",
+    "color": "#1B263B"
+  }
+]

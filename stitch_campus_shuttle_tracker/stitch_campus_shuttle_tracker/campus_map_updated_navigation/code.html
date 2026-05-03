@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Campus Map - Campus Transit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#bbc6e2",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#3c475d",
+                    "on-primary-fixed": "#101b30",
+                    "primary": "#051125",
+                    "surface-tint": "#545e76",
+                    "primary-fixed": "#d7e2ff",
+                    "on-error": "#ffffff",
+                    "secondary-container": "#db313f",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#2d3133",
+                    "surface": "#f7f9fb",
+                    "secondary": "#b7102a",
+                    "on-surface-variant": "#45474d",
+                    "error": "#ba1a1a",
+                    "on-tertiary": "#ffffff",
+                    "primary-container": "#1b263b",
+                    "on-surface": "#191c1e",
+                    "on-secondary-fixed-variant": "#92001c",
+                    "outline": "#75777d",
+                    "on-primary-container": "#828da7",
+                    "inverse-primary": "#bbc6e2",
+                    "on-tertiary-container": "#4a90e2",
+                    "on-tertiary-fixed-variant": "#004883",
+                    "tertiary-container": "#00274b",
+                    "surface-container-low": "#f2f4f6",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#eff1f3",
+                    "secondary-fixed-dim": "#ffb3b1",
+                    "on-error-container": "#93000a",
+                    "surface-variant": "#e0e3e5",
+                    "surface-container-high": "#e6e8ea",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-background": "#191c1e",
+                    "tertiary-fixed-dim": "#a4c9ff",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-fixed": "#ffdad8",
+                    "on-secondary-fixed": "#410007",
+                    "on-tertiary-fixed": "#001c39",
+                    "on-secondary-container": "#fffbff",
+                    "background": "#f7f9fb",
+                    "tertiary-fixed": "#d4e3ff",
+                    "surface-container": "#eceef0",
+                    "error-container": "#ffdad6",
+                    "outline-variant": "#c5c6cd",
+                    "tertiary": "#001228",
+                    "surface-dim": "#d8dadc"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "unit": "4px",
+                    "md": "16px",
+                    "gutter": "16px",
+                    "xl": "32px",
+                    "lg": "24px",
+                    "container-margin": "24px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Manrope"],
+                    "headline-sm": ["Manrope"],
+                    "body-md": ["Inter"],
+                    "label-bold": ["Inter"],
+                    "headline-lg": ["Manrope"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-md": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-lg": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .map-container {
+            height: calc(100vh - 72px - 80px);
+        }
+        body {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface select-none overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="bg-white dark:bg-slate-900 text-[#1B263B] dark:text-slate-100 font-manrope text-lg font-bold tracking-tight top-0 sticky z-50 border-b border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center w-full px-6 py-4 h-[72px]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-2xl" data-icon="directions_bus">directions_bus</span>
+<span class="text-xl font-black text-[#1B263B] dark:text-white tracking-tighter">Campus Transit</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:opacity-80 p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas: Interactive Map -->
+<main class="relative w-full map-container overflow-hidden flex-grow">
+<!-- Background Map Layer -->
+<div class="absolute inset-0 bg-surface-variant">
+<img class="w-full h-full object-cover opacity-80" data-alt="A highly detailed architectural site plan of a prestigious university campus, viewed from a top-down satellite perspective." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkhc84ykbXcMiGJhJc9WCw2IYOMiQ6KRtwcNBkgCgNyR7J7dgdQhQry9Mb8FT4Lphq5TSyJhb2Dx2KqqFST6EgyIm5lFnQZzMXIGNRqdk_yA6pnKVkXDGCtFfwHfZHmpt7x2I7QZkiS14Kq_ZkXsKY1NsPCA4isn7ctIZ9d3lIirC2yTHLDvOisAkJYpBTIc8vsgl0oR9-rg5nXAySxOpDo5wkIfJp1GA6-rwk4UHX_aZRYzEv7ARnC8BkpVLH5O5Jv3Blg2psT1Q"/>
+</div>
+<!-- Transit Route Overlays (SVG) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" preserveaspectratio="xMidYMid slice" viewbox="0 0 1000 1000">
+<path class="opacity-60" d="M 100 400 L 300 450 L 500 420 L 700 600 L 900 650" fill="none" stroke="#4A90E2" stroke-linecap="round" stroke-linejoin="round" stroke-width="8"></path>
+<path class="opacity-60" d="M 200 100 L 250 300 L 450 500 L 500 800 L 600 900" fill="none" stroke="#B7102A" stroke-linecap="round" stroke-linejoin="round" stroke-width="8"></path>
+</svg>
+<!-- Dynamic Map Elements -->
+<!-- User Location -->
+<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+<div class="relative flex flex-col items-center">
+<div class="relative flex items-center justify-center">
+<div class="absolute w-10 h-10 bg-on-tertiary-container/30 rounded-full animate-ping"></div>
+<div class="w-6 h-6 bg-on-tertiary-container border-4 border-white rounded-full shadow-lg"></div>
+</div>
+<div class="mt-1 bg-primary-container text-white text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider shadow-sm">You</div>
+</div>
+</div>
+<!-- Bus Marker: Blue Line -->
+<div class="absolute left-[300px] top-[450px] -translate-x-1/2 -translate-y-1/2 z-30">
+<div class="flex items-center gap-2 bg-white rounded-full pr-3 pl-1 py-1 shadow-lg border border-slate-100">
+<div class="w-7 h-7 bg-on-tertiary-container text-white rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] fill-1" data-icon="directions_bus">directions_bus</span>
+</div>
+<span class="font-label-bold text-[10px] text-primary-container whitespace-nowrap">BLUE LINE</span>
+</div>
+</div>
+<!-- Search Overlay -->
+<div class="absolute top-4 left-0 right-0 px-4 z-40">
+<div class="max-w-md mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/50 flex items-center px-4 py-3.5 gap-3">
+<span class="material-symbols-outlined text-slate-400" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-full placeholder:text-slate-400 text-primary-container p-0" placeholder="Search for buildings or bus stops" type="text"/>
+<span class="material-symbols-outlined text-slate-400" data-icon="mic">mic</span>
+</div>
+</div>
+<!-- Map Controls (Floating Buttons) -->
+<div class="absolute right-4 bottom-6 flex flex-col gap-3 z-40">
+<button class="w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 text-primary-container flex items-center justify-center active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+</button>
+<button class="w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 text-primary-container flex items-center justify-center active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="my_location">my_location</span>
+</button>
+<button class="w-14 h-14 bg-secondary text-white rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-all">
+<span class="material-symbols-outlined font-bold text-[28px]" data-icon="emergency">emergency</span>
+</button>
+</div>
+</main>
+<!-- Unified Bottom Navigation Bar -->
+<nav class="h-[80px] w-full flex justify-around items-center px-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_15px_rgba(27,38,59,0.06)] z-50">
+<div class="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" data-icon="grid_view">grid_view</span>
+<span class="font-manrope text-[11px] font-semibold">Dashboard</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center">
+<div class="bg-slate-100 dark:bg-slate-800 text-primary dark:text-white rounded-xl px-4 py-2 flex flex-col items-center justify-center transition-all">
+<span class="material-symbols-outlined mb-0.5 fill-1" data-icon="map">map</span>
+<span class="font-manrope text-[11px] font-bold">Campus Map</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" data-icon="explore">explore</span>
+<span class="font-manrope text-[11px] font-semibold">Live Tracking</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" data-icon="security">security</span>
+<span class="font-manrope text-[11px] font-semibold">Safety Panel</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform" data-icon="person">person</span>
+<span class="font-manrope text-[11px] font-semibold">Profile</span>
+</div>
+</nav>
+</body></html>

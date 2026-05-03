@@ -1,15 +1,366 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #3B82F6;
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --bg-dark: #0F172A;
-  --text-muted: #94A3B8;
+  /* ── Typography ── */
+  --font-headline: 'Manrope', sans-serif;
+  --font-body:     'Inter', sans-serif;
+
+  /* ── Brand ── */
+  --brand-navy:          #1B263B;   /* Deep Navy — primary dark surface */
+  --brand-red:           #E63946;   /* Vibrant Red — primary CTA, active states */
+  --brand-red-light:     #FDECEA;   /* Red tint — badge backgrounds, alerts */
+  --brand-red-hover:     #CC2F3C;   /* Hover state for red buttons */
+
+  /* ── Base Surfaces ── */
+  --bg-primary:          #F4F6FA;   /* App background — warm off-white */
+  --bg-secondary:        #FFFFFF;   /* Cards, bottom sheet, modals */
+  --bg-tertiary:         #EEF1F7;   /* Input fields, inactive tabs */
+  --bg-navy-card:        #1B263B;   /* Dark navy card (My Bus Card dark section) */
+  --surface-overlay:     rgba(255, 255, 255, 0.78);  /* Glassmorphism bars */
+  --border:              #DDE3EE;   /* Card borders, dividers */
+  --shadow-sm:           rgba(27, 38, 59, 0.06);
+  --shadow-md:           rgba(27, 38, 59, 0.12);
+  --shadow-lg:           rgba(27, 38, 59, 0.20);
+
+  /* ── Text ── */
+  --text-primary:        #1B263B;   /* Headings — same as brand navy */
+  --text-secondary:      #4A5568;   /* Body, descriptions */
+  --text-muted:          #8E9BBC;   /* Timestamps, placeholders, captions */
+  --text-inverse:        #FFFFFF;   /* Text on dark/red surfaces */
+  --text-on-red:         #FFFFFF;   /* Text on brand-red */
+
+  /* ── Accent / Interactive ── */
+  --accent-primary:      #E63946;   /* Primary CTA, active nav dot, ETA badge */
+  --accent-primary-bg:   #FDECEA;   /* Light red backgrounds */
+  --accent-hover:        #CC2F3C;
+  --accent-secondary:    #1B263B;   /* Navy — secondary buttons, headers */
+
+  /* ── Status ── */
+  --success:             #16A34A;
+  --success-bg:          #DCFCE7;
+  --warning:             #D97706;
+  --warning-bg:          #FEF3C7;
+  --danger:              #DC2626;
+  --danger-bg:           #FEE2E2;
+  --info:                #2563EB;
+  --info-bg:             #DBEAFE;
+
+  /* ── Map ── */
+  --route-line:          rgba(230, 57, 70, 0.65);   /* Red route polyline */
+  --route-line-passed:   rgba(142, 155, 188, 0.40);
+  --stop-pin-active:     #E63946;
+  --stop-pin-default:    #8E9BBC;
+  --stop-pin-done:       #DDE3EE;
+  --bus-ring:            #FFFFFF;
+  --user-dot:            #E63946;
+  --user-dot-ring:       rgba(230, 57, 70, 0.22);
+
+  /* ── Navigation ── */
+  --nav-bg:              #FFFFFF;
+  --nav-border:          #DDE3EE;
+  --nav-active:          #E63946;
+  --nav-inactive:        #8E9BBC;
+
+  /* ── Border Radius ── */
+  --radius-sm:   0.5rem;    /* 8px  */
+  --radius-md:   0.75rem;   /* 12px */
+  --radius-lg:   1rem;      /* 16px — primary "Soft Institutional" */
+  --radius-xl:   1.25rem;   /* 20px */
+  --radius-full: 9999px;
+
+  /* ── Shadow System ── */
+  --shadow-card: 0 2px 8px var(--shadow-sm), 0 0 1px var(--border);
+  --shadow-sheet: 0 -4px 24px var(--shadow-md);
+  --shadow-modal: 0 8px 40px var(--shadow-lg);
+  --shadow-nav: 0 -1px 0 var(--nav-border);
+
+  /* ── Spacing System ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
 }
 
+[data-theme="dark"] {
+  /* ── Brand ── */
+  --brand-navy:          #1B263B;
+  --brand-red:           #FF6B74;   /* Lighter red — better contrast on dark */
+  --brand-red-light:     #2D1215;
+  --brand-red-hover:     #FF8A91;
+
+  /* ── Base Surfaces ── */
+  --bg-primary:          #0E1623;   /* Deeper than navy — true dark background */
+  --bg-secondary:        #1B263B;   /* Deep Navy — card surface */
+  --bg-tertiary:         #243347;   /* Slightly lighter — inputs, inactive */
+  --bg-navy-card:        #243347;
+  --surface-overlay:     rgba(14, 22, 35, 0.82);
+  --border:              #2A3F5C;
+  --shadow-sm:           rgba(0, 0, 0, 0.20);
+  --shadow-md:           rgba(0, 0, 0, 0.35);
+  --shadow-lg:           rgba(0, 0, 0, 0.50);
+
+  /* ── Text ── */
+  --text-primary:        #E8EDF5;
+  --text-secondary:      #8E9BBC;
+  --text-muted:          #4A5E7A;
+  --text-inverse:        #0E1623;
+  --text-on-red:         #FFFFFF;
+
+  /* ── Accent / Interactive ── */
+  --accent-primary:      #FF6B74;
+  --accent-primary-bg:   #2D1215;
+  --accent-hover:        #FF8A91;
+  --accent-secondary:    #8E9BBC;
+
+  /* ── Status ── */
+  --success:             #4ADE80;
+  --success-bg:          #052E16;
+  --warning:             #FCD34D;
+  --warning-bg:          #1C1200;
+  --danger:              #F87171;
+  --danger-bg:           #2D0000;
+  --info:                #60A5FA;
+  --info-bg:             #1E3A5F;
+
+  /* ── Map ── */
+  --route-line:          rgba(255, 107, 116, 0.70);
+  --route-line-passed:   rgba(42, 63, 92, 0.60);
+  --stop-pin-active:     #FF6B74;
+  --stop-pin-default:    #4A5E7A;
+  --stop-pin-done:       #2A3F5C;
+  --bus-ring:            #1B263B;
+  --user-dot:            #FF6B74;
+  --user-dot-ring:       rgba(255, 107, 116, 0.20);
+
+  /* ── Navigation ── */
+  --nav-bg:              #1B263B;
+  --nav-border:          #2A3F5C;
+  --nav-active:          #FF6B74;
+  --nav-inactive:        #4A5E7A;
+}
+
+@theme {
+  --color-primary: var(--accent-primary);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border: var(--border);
+}
+
+/* Global Typography */
 body {
-  margin: 0;
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+h1, h2, h3, .headline {
+  font-family: var(--font-headline);
+}
+
+/* Smooth transitions for theme switching */
+*, *::before, *::after {
+  transition: background-color 250ms ease, 
+              color 200ms ease, 
+              border-color 200ms ease,
+              box-shadow 200ms ease;
+}
+
+/* Custom Animations */
+@keyframes ripple {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-ripple {
+  animation: ripple 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+/* Glassmorphism */
+.glass {
+  background: var(--surface-overlay);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 10px; }
+
+/* Safe Area Handling (iOS / Android) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+nav.fixed.bottom-0 {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+main.pb-16 {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Leaflet Overrides */
+.leaflet-container { background-color: var(--bg-primary) !important; }
+.leaflet-popup-content-wrapper {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px var(--shadow-card) !important;
+}
+.leaflet-popup-tip { background: var(--bg-secondary) !important; }
+
+/* Components */
+.card {
+  background:    var(--bg-secondary);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:    var(--shadow-card);
+  padding:       var(--space-5);
+}
+
+.btn-primary {
+  background:    var(--accent-primary);
+  color:         var(--text-on-red);
+  border-radius: var(--radius-lg);
+  font-family:   var(--font-body);
+  font-size:     14px;
+  font-weight:   600;
+  padding:       12px 20px;
+  border:        none;
+  cursor:        pointer;
+  transition:    background 200ms ease, transform 100ms ease;
+}
+.btn-primary:hover  { background: var(--accent-hover); }
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-secondary {
+  background:    transparent;
+  color:         var(--text-primary);
+  border:        1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-weight:   600;
+  font-size:     14px;
+  padding:       11px 20px;
+  cursor:        pointer;
+  transition:    background 200ms ease;
+}
+.btn-secondary:hover { background: var(--bg-tertiary); }
+
+.pill {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             4px;
+  border-radius:   var(--radius-sm);
+  padding:         3px 8px;
+  font-family:     var(--font-body);
+  font-size:       11px;
+  font-weight:     600;
+  letter-spacing:  0.03em;
+  text-transform:  uppercase;
+}
+.pill-success  { background: var(--success-bg);  color: var(--success); }
+.pill-warning  { background: var(--warning-bg);  color: var(--warning); }
+.pill-danger   { background: var(--danger-bg);   color: var(--danger);  }
+.pill-info     { background: var(--info-bg);     color: var(--info);    }
+.pill-red      { background: var(--brand-red-light); color: var(--accent-primary); }
+
+.feature-badge {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           3px;
+  background:    var(--bg-tertiary);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding:       2px 7px;
+  font-size:     11px;
+  font-weight:   500;
+  color:         var(--text-secondary);
+}
+
+.input {
+  background:    var(--bg-tertiary);
+  border:        1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding:       12px 16px;
+  font-family:   var(--font-body);
+  font-size:     14px;
+  color:         var(--text-primary);
+  outline:       none;
+  width:         100%;
+  transition:    border-color 200ms ease;
+}
+.input:focus {
+  border-color: var(--accent-primary);
+}
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.bottom-sheet {
+  background:       var(--bg-secondary);
+  border-radius:    var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow:       var(--shadow-sheet);
+  padding:          var(--space-5);
+}
+
+.bottom-sheet__handle {
+  width:         40px;
+  height:        4px;
+  background:    var(--border);
+  border-radius: var(--radius-full);
+  margin:        0 auto var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .bottom-sheet {
+    top: 56px !important; /* PageHeader height */
+    left: 0 !important;
+    bottom: 0 !important;
+    right: auto !important;
+    width: 420px !important;
+    height: calc(100vh - 56px) !important;
+    border-radius: 0 !important;
+    border-right: 1px solid var(--border);
+    box-shadow: 4px 0 24px var(--shadow-md) !important;
+    padding-bottom: 0 !important; /* Remove mobile safe area padding */
+  }
+  .bottom-sheet__handle {
+    display: none !important;
+  }
+}
+
+/* Campus map tooltips */
+.campus-boundary-tooltip {
+  background:   var(--bg-secondary);
+  border:       1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color:        var(--text-primary);
+  font-family:  var(--font-headline);
+  font-size:    12px;
+  font-weight:  700;
+  padding:      3px 8px;
+  box-shadow:   var(--shadow-card);
+  white-space:  nowrap;
+}
+
+.campus-boundary-tooltip::before {
+  border-top-color: var(--border) !important;
+}
+
+.campus-stop-tooltip {
+  background:    var(--bg-secondary);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color:         var(--text-primary);
+  font-family:   var(--font-body);
+  font-size:     12px;
+  font-weight:   500;
+  padding:       3px 8px;
+  box-shadow:    var(--shadow-card);
 }

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eff1f3",
+                        "on-background": "#191c1e",
+                        "primary-fixed": "#d7e2ff",
+                        "surface-variant": "#e0e3e5",
+                        "surface-tint": "#545e76",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "secondary-fixed": "#ffdad8",
+                        "outline": "#75777d",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#3c475d",
+                        "surface-container-low": "#f2f4f6",
+                        "on-surface-variant": "#45474d",
+                        "on-tertiary-container": "#4a90e2",
+                        "surface-container-high": "#e6e8ea",
+                        "tertiary": "#001228",
+                        "tertiary-fixed": "#d4e3ff",
+                        "tertiary-fixed-dim": "#a4c9ff",
+                        "on-tertiary-fixed": "#001c39",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary-fixed-dim": "#bbc6e2",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#db313f",
+                        "primary": "#051125",
+                        "on-surface": "#191c1e",
+                        "error": "#ba1a1a",
+                        "primary-container": "#1b263b",
+                        "on-primary-container": "#828da7",
+                        "on-tertiary-fixed-variant": "#004883",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#ffb3b1",
+                        "on-secondary-fixed": "#410007",
+                        "on-secondary-container": "#fffbff",
+                        "inverse-primary": "#bbc6e2",
+                        "secondary": "#b7102a",
+                        "surface-container": "#eceef0",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed": "#101b30",
+                        "surface-bright": "#f7f9fb",
+                        "outline-variant": "#c5c6cd",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-fixed-variant": "#92001c",
+                        "tertiary-container": "#00274b",
+                        "background": "#f7f9fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "container-margin": "24px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Manrope"],
+                        "headline-lg": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "headline-md": ["Manrope"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "headline-lg": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "headline-md": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .bento-item-large {
+            grid-column: span 2;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-secondary-fixed">
+<header class="bg-white dark:bg-slate-900 text-[#1B263B] dark:text-slate-100 font-manrope text-lg font-bold tracking-tight docked full-width top-0 sticky z-50 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-2xl" data-icon="directions_bus">directions_bus</span>
+<span class="text-xl font-black text-[#1B263B] dark:text-white tracking-tighter">Campus Transit</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors p-2 rounded-full" data-icon="notifications">notifications</button>
+</div>
+</header>
+<main class="max-w-3xl mx-auto px-container-margin py-lg pb-32">
+<section class="mb-lg">
+<h1 class="font-headline-lg text-headline-lg mb-xs">Safety Panel</h1>
+<p class="font-body-md text-on-surface-variant">Real-time assistance and campus security tools</p>
+</section>
+<div class="bento-grid">
+<div class="bento-item-large bg-white border border-outline-variant/30 rounded-xl p-lg shadow-[0_4px_15px_rgba(27,38,59,0.06)] relative overflow-hidden">
+<div class="flex flex-col items-center justify-center py-xl text-center z-10 relative">
+<div class="mb-md p-6 rounded-full bg-error-container/30 border-4 border-white shadow-lg animate-pulse">
+<button class="bg-secondary w-32 h-32 rounded-full flex flex-col items-center justify-center text-white shadow-[0_0_40px_rgba(183,16,42,0.4)] active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-5xl mb-1" data-icon="emergency" data-weight="fill" style="font-variation-settings: 'FILL' 1;">emergency</span>
+<span class="font-label-bold text-xs">SOS</span>
+</button>
+</div>
+<h2 class="font-headline-md text-headline-md mb-xs">Emergency Assistance</h2>
+<p class="font-body-md text-on-surface-variant max-w-[280px]">Press and hold for 3 seconds to alert campus security and share your live location.</p>
+</div>
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="absolute -right-10 -bottom-10 w-48 h-48 bg-secondary rounded-full blur-3xl"></div>
+</div>
+</div>
+<div class="bg-white border border-outline-variant/30 rounded-xl p-md shadow-[0_4px_15px_rgba(27,38,59,0.06)] flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-sm text-on-tertiary-container">
+<span class="material-symbols-outlined text-xl" data-icon="share_location">share_location</span>
+<span class="font-label-bold">LIVE SHARING</span>
+</div>
+<p class="font-body-md text-on-surface-variant mb-md">Allow trusted contacts to see your bus journey in real-time.</p>
+</div>
+<button class="w-full py-2.5 rounded-lg bg-primary text-white font-label-bold flex items-center justify-center gap-2 active:opacity-80 transition-all">
+                    Share Location
+                </button>
+</div>
+<div class="bg-white border border-outline-variant/30 rounded-xl p-md shadow-[0_4px_15px_rgba(27,38,59,0.06)] flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-sm text-on-tertiary-container">
+<span class="material-symbols-outlined text-xl" data-icon="shield">shield</span>
+<span class="font-label-bold">VIRTUAL ESCORT</span>
+</div>
+<p class="font-body-md text-on-surface-variant mb-md">Request a digital walk-along from dispatch until you arrive.</p>
+</div>
+<button class="w-full py-2.5 rounded-lg border border-primary text-primary font-label-bold flex items-center justify-center gap-2 active:bg-surface-container transition-all">
+                    Request Help
+                </button>
+</div>
+<div class="bento-item-large bg-surface-container-low rounded-xl p-lg">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-sm text-headline-sm">Emergency Contacts</h3>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="phone_forwarded">phone_forwarded</span>
+</div>
+<div class="space-y-sm">
+<a class="flex items-center justify-between p-md bg-white rounded-lg border border-outline-variant/20 hover:border-secondary transition-colors group" href="tel:911">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined" data-icon="local_police">local_police</span>
+</div>
+<div>
+<p class="font-label-bold text-on-background">Campus Police</p>
+<p class="text-[12px] text-on-surface-variant">(555) 012-3456</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary" data-icon="call">call</span>
+</a>
+<a class="flex items-center justify-between p-md bg-white rounded-lg border border-outline-variant/20 hover:border-on-tertiary-container transition-colors group" href="tel:911">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+</div>
+<div>
+<p class="font-label-bold text-on-background">University Medical</p>
+<p class="text-[12px] text-on-surface-variant">(555) 012-9988</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" data-icon="call">call</span>
+</a>
+<a class="flex items-center justify-between p-md bg-white rounded-lg border border-outline-variant/20 hover:border-on-tertiary-container transition-colors group" href="tel:911">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+</div>
+<div>
+<p class="font-label-bold text-on-background">SafeRide Dispatch</p>
+<p class="text-[12px] text-on-surface-variant">(555) 012-1111</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" data-icon="call">call</span>
+</a>
+</div>
+</div>
+<div class="bento-item-large bg-white border border-outline-variant/30 rounded-xl p-lg shadow-[0_4px_15px_rgba(27,38,59,0.06)]">
+<h3 class="font-headline-sm text-headline-sm mb-md">Report Incident</h3>
+<form class="space-y-md">
+<div class="grid grid-cols-2 gap-sm">
+<button class="flex flex-col items-center gap-1 p-md rounded-lg bg-surface-container-low border border-transparent hover:border-secondary transition-all" type="button">
+<span class="material-symbols-outlined text-secondary" data-icon="car_crash">car_crash</span>
+<span class="text-[11px] font-label-bold">Accident</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-md rounded-lg bg-surface-container-low border border-transparent hover:border-on-tertiary-container transition-all" type="button">
+<span class="material-symbols-outlined text-on-tertiary-container" data-icon="build">build</span>
+<span class="text-[11px] font-label-bold">Breakdown</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-md rounded-lg bg-surface-container-low border border-transparent hover:border-on-tertiary-container transition-all" type="button">
+<span class="material-symbols-outlined text-on-tertiary-container" data-icon="visibility_off">visibility_off</span>
+<span class="text-[11px] font-label-bold">Suspicious</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-md rounded-lg bg-surface-container-low border border-transparent hover:border-on-tertiary-container transition-all" type="button">
+<span class="material-symbols-outlined text-on-tertiary-container" data-icon="more_horiz">more_horiz</span>
+<span class="text-[11px] font-label-bold">Other</span>
+</button>
+</div>
+<div>
+<textarea class="w-full bg-surface-container-low border-none rounded-xl text-body-md focus:ring-primary h-24 placeholder:text-on-surface-variant/50" placeholder="Optional details (e.g. Bus Number, Route name)..."></textarea>
+</div>
+<button class="w-full py-4 rounded-xl bg-primary text-white font-label-bold active:scale-[0.98] transition-transform" type="submit">
+                        Submit Report
+                    </button>
+</form>
+</div>
+</div>
+</main>
+<nav class="bg-white dark:bg-slate-900 text-[#1B263B] dark:text-slate-100 font-manrope text-[11px] font-semibold fixed bottom-0 w-full z-50 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_15px_rgba(27,38,59,0.06)] fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 bg-white dark:bg-slate-900">
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-1.5 hover:text-[#1B263B] dark:hover:text-white transition-colors active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-1.5 hover:text-[#1B263B] dark:hover:text-white transition-colors active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="explore">explore</span>
+<span>Live Tracking</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 text-[#1B263B] dark:text-white rounded-lg px-4 py-1.5 transition-colors active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="gpp_maybe" data-weight="fill" style="font-variation-settings: 'FILL' 1;">gpp_maybe</span>
+<span>Safety Panel</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-1.5 hover:text-[#1B263B] dark:hover:text-white transition-colors active:scale-95 duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span>Profile</span>
+</a>
+</nav>
+</body></html>
