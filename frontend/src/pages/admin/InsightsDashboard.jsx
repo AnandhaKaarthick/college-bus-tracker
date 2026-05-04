@@ -3,7 +3,7 @@ import {
   BarChart3, TrendingUp, Fuel, Clock, 
   Download, Filter, ChevronRight, BarChart,
   Play, Pause, FastForward, Map as MapIcon,
-  Flame, History
+  Flame, History, Activity, Navigation
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
@@ -15,21 +15,35 @@ export default function InsightsDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulating stats calculation
-    setTimeout(() => {
-      setStats({
-        totalKm: 1240,
-        avgKm: 82.6,
-        estFuel: 310,
-        topBuses: [
-          { name: 'Bus 04', driver: 'Suresh Raina', km: 112, efficiency: 4.8, grade: 'A' },
-          { name: 'Bus 01', driver: 'Ramesh Kumar', km: 95, efficiency: 4.2, grade: 'B' },
-          { name: 'Bus 09', driver: 'M.S. Dhoni', km: 88, efficiency: 4.5, grade: 'B' },
-          { name: 'Bus 12', driver: 'Virat Kohli', km: 42, efficiency: 3.1, grade: 'D' },
-        ]
-      });
-      setIsLoading(false);
-    }, 1000);
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/admin/insights/fuel-km');
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.fuel_km || [];
+          const totalKm = list.reduce((acc, curr) => acc + curr.kmToday, 0);
+          const totalFuel = list.reduce((acc, curr) => acc + curr.estimatedFuelL, 0);
+          
+          setStats({
+            totalKm: Math.round(totalKm),
+            avgKm: list.length ? Math.round(totalKm / list.length) : 0,
+            estFuel: Math.round(totalFuel),
+            topBuses: list.map(b => ({
+              name: `Bus ${b.busId}`,
+              driver: b.driverName,
+              km: b.kmToday,
+              efficiency: (b.kmToday / (b.estimatedFuelL/7 || 1)).toFixed(1),
+              grade: b.kmToday > 20 ? 'A' : 'B'
+            }))
+          });
+        }
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error fetching insights:", err);
+        setIsLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   return (
@@ -40,7 +54,6 @@ export default function InsightsDashboard() {
           <div className="flex gap-4">
             {[
               { id: 'efficiency', label: 'Fuel/KM', icon: Fuel },
-              { id: 'history', label: 'Time Machine', icon: History },
               { id: 'heatmap', label: 'Ridership', icon: Flame },
             ].map(tab => (
               <button
@@ -70,7 +83,6 @@ export default function InsightsDashboard() {
         ) : (
           <div className="h-full">
             {activeTab === 'efficiency' && <EfficiencyView stats={stats} />}
-            {activeTab === 'history' && <TimeMachineView />}
             {activeTab === 'heatmap' && <RidershipHeatmapView />}
           </div>
         )}
@@ -104,167 +116,92 @@ function EfficiencyView({ stats }) {
         </div>
       </div>
 
-      {/* Performance Distribution Chart */}
-      <div className="bg-[var(--bg-secondary)] p-10 rounded-[50px] border border-[var(--border)]">
-        <div className="flex justify-between items-center mb-10">
-          <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Performance Distribution</h3>
-          <div className="flex gap-2">
-            {['7D', '30D', 'ALL'].map(p => (
-              <button key={p} className={`px-4 py-1.5 rounded-full text-[10px] font-black ${p === '7D' ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)]'}`}>
-                {p}
-              </button>
-            ))}
+      {/* Prediction Accuracy Chart */}
+      <div className="bg-[var(--bg-secondary)] p-10 rounded-[50px] border border-[var(--border)] relative shadow-sm">
+        <div className="flex justify-between items-start mb-12">
+          <div>
+            <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Prediction Accuracy (MAE & RMSE)</h3>
+            <p className="text-sm font-medium text-[var(--text-muted)] mt-1">Weekly error metrics in minutes</p>
+          </div>
+          
+          <div className="flex gap-4">
+            <div className="bg-blue-50 px-6 py-4 rounded-3xl text-center border border-blue-100">
+              <div className="text-2xl font-black text-blue-600">2.31</div>
+              <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1">Avg MAE</div>
+              <div className="text-[10px] font-black text-green-500 mt-1">↓ 8%</div>
+            </div>
+            <div className="bg-purple-50 px-6 py-4 rounded-3xl text-center border border-purple-100">
+              <div className="text-2xl font-black text-purple-600">3.14</div>
+              <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mt-1">Avg RMSE</div>
+              <div className="text-[10px] font-black text-green-500 mt-1">↓ 5%</div>
+            </div>
           </div>
         </div>
-        <div className="h-64 flex items-end gap-4">
-          {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
-            <div key={i} className="flex-1 bg-[var(--bg-tertiary)] rounded-t-2xl relative group overflow-hidden">
-              <motion.div 
-                initial={{ height: 0 }}
-                animate={{ height: `${h}%` }}
-                transition={{ delay: i * 0.1, duration: 1 }}
-                className="absolute bottom-0 w-full bg-[var(--accent-primary)] opacity-20 group-hover:opacity-40 transition-opacity"
-              />
-              <motion.div 
-                initial={{ height: 0 }}
-                animate={{ height: `${h * 0.6}%` }}
-                transition={{ delay: i * 0.1 + 0.5, duration: 1 }}
-                className="absolute bottom-0 w-full bg-[var(--accent-primary)]"
-              />
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between mt-6 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest px-2">
-          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function TimeMachineView() {
-  const [timeValue, setTimeValue] = useState(480); // 08:00 AM
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [snapshots, setSnapshots] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
+        <div className="relative h-72 mb-8">
+          {/* Y-Axis Labels */}
+          <div className="absolute left-0 h-full w-8 flex flex-col justify-between text-[10px] font-bold text-[var(--text-muted)] pb-8">
+            {[8, 6, 4, 2, 0].map(val => <span key={val}>{val}</span>)}
+          </div>
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch('http://localhost:8000/api/admin/history/snapshots?date=2024-05-01');
-        if (res.ok) {
-          const data = await res.json();
-          setSnapshots(data.snapshots || {});
-        }
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching history:", err);
-        setIsLoading(false);
-      }
-    };
-    fetchHistory();
-  }, []);
+          {/* Grid Lines */}
+          <div className="absolute left-8 right-0 h-full flex flex-col justify-between pb-8">
+            {[0, 1, 2, 3, 4].map(i => (
+              <div key={i} className="w-full border-t border-dashed border-[var(--border)] opacity-50" />
+            ))}
+          </div>
 
-  useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      setTimeValue(prev => (prev >= 1439 ? 0 : prev + 1));
-    }, 1000 / playbackSpeed);
-    return () => clearInterval(interval);
-  }, [isPlaying, playbackSpeed]);
-
-  const formatTime = (minutes) => {
-    const h = Math.floor(minutes / 60).toString().padStart(2, '0');
-    const m = (minutes % 60).toString().padStart(2, '0');
-    return `${h}:${m}`;
-  };
-
-  const currentFrame = snapshots[timeValue] || [];
-
-  return (
-    <div className="h-full flex flex-col relative overflow-hidden">
-      {/* Controls Overlay */}
-      <div className="absolute top-6 left-6 right-6 z-[1000] flex justify-between items-center pointer-events-none">
-        <div className="glass p-4 rounded-3xl flex items-center gap-6 shadow-2xl pointer-events-auto border border-white/10">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="w-12 h-12 bg-[var(--accent-primary)] text-white rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-500/20"
-            >
-              {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-1" />}
-            </button>
-            <div>
-              <div className="text-[24px] font-black text-[var(--text-primary)] tracking-tighter leading-none mb-1">
-                {formatTime(timeValue)}
+          {/* Bars Container */}
+          <div className="absolute left-10 right-0 h-full flex items-end gap-10 pb-8">
+            {[
+              { mae: 2.2, rmse: 3.1 },
+              { mae: 3.1, rmse: 4.2 },
+              { mae: 1.8, rmse: 2.4 },
+              { mae: 2.6, rmse: 3.5 },
+              { mae: 1.4, rmse: 1.9 },
+              { mae: 2.9, rmse: 3.8 },
+              { mae: 2.1, rmse: 2.7 }
+            ].map((d, i) => (
+              <div key={i} className="flex-1 flex items-end justify-center gap-1 h-full">
+                {/* MAE Bar */}
+                <div 
+                  style={{ height: `${(d.mae / 8) * 100}%` }}
+                  className="w-8 bg-blue-600 rounded-lg hover:brightness-110 transition-all cursor-pointer relative group"
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    MAE: {d.mae}m
+                  </div>
+                </div>
+                {/* RMSE Bar */}
+                <div 
+                  style={{ height: `${(d.rmse / 8) * 100}%` }}
+                  className="w-8 bg-purple-500 rounded-lg hover:brightness-110 transition-all cursor-pointer relative group"
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    RMSE: {d.rmse}m
+                  </div>
+                </div>
               </div>
-              <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Playback Time</div>
-            </div>
-          </div>
-          
-          <div className="h-10 w-px bg-[var(--border)]" />
-          
-          <div className="flex items-center gap-2">
-            {[1, 5, 10, 30].map(s => (
-              <button 
-                key={s}
-                onClick={() => setPlaybackSpeed(s)}
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-all ${playbackSpeed === s ? 'bg-[var(--accent-primary)] text-white' : 'hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)]'}`}
-              >
-                {s}X
-              </button>
             ))}
           </div>
         </div>
-        
-        <div className="glass p-4 rounded-3xl shadow-2xl pointer-events-auto border border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-500/10 text-green-500 rounded-xl flex items-center justify-center">
-              <Activity size={20} />
+
+        {/* Legend & X-Axis */}
+        <div className="ml-10">
+          <div className="flex justify-between text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-10 px-4">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => <span key={day}>{day}</span>)}
+          </div>
+          
+          <div className="flex justify-center gap-8">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-600" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">MAE</span>
             </div>
-            <div>
-              <div className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tight">{currentFrame.length} Units</div>
-              <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Active in snapshot</div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">RMSE</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Map */}
-      <div className="flex-1 z-0">
-        <MapContainer center={[13.0494, 80.0249]} zoom={13} className="h-full w-full" zoomControl={false}>
-          <TileLayer
-            attribution='&copy; OpenStreetMap'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          />
-          {currentFrame.map((bus, idx) => (
-            <Marker 
-              key={`${bus.bus_id}-${idx}`}
-              position={[bus.lat, bus.lng]}
-              icon={new L.DivIcon({
-                className: 'history-bus-icon',
-                html: `<div class="w-8 h-8 bg-[var(--accent-primary)] rounded-xl shadow-lg border-2 border-white flex items-center justify-center text-white"><Navigation size={14} /></div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
-              })}
-            />
-          ))}
-        </MapContainer>
-      </div>
-
-      {/* Timeline Slider */}
-      <div className="p-8 bg-[var(--bg-secondary)] border-t border-[var(--border)] shrink-0">
-        <div className="relative group">
-          <div className="absolute -top-8 left-0 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">00:00</div>
-          <div className="absolute -top-8 right-0 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">23:59</div>
-          <input 
-            type="range"
-            min={0}
-            max={1439}
-            value={timeValue}
-            onChange={(e) => setTimeValue(parseInt(e.target.value))}
-            className="w-full h-2 bg-[var(--bg-tertiary)] rounded-lg appearance-none cursor-pointer accent-[var(--accent-primary)]"
-          />
         </div>
       </div>
     </div>

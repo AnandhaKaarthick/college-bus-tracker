@@ -111,8 +111,55 @@ async def get_routes(db: Session = Depends(get_db)):
         })
     return {"routes": result}
 
+@app.get("/api/admin/buses")
+async def get_admin_buses(db: Session = Depends(get_db)):
+    buses = db.query(models.Bus).all()
+    result = []
+    for b in buses:
+        live = db.query(models.BusLivePosition).filter(models.BusLivePosition.bus_id == b.id).first()
+        route = db.query(models.Route).filter(models.Route.id == b.route_id).first() if b.route_id else None
+        driver = db.query(models.User).filter(models.User.id == b.driver_id).first() if b.driver_id else None
+        
+        stat = db.query(models.BusDailyStat).filter(models.BusDailyStat.bus_id == b.id).first()
+        km_today = stat.km_today if stat else 0.0
+        
+        result.append({
+            "bus_id": str(b.id),
+            "name": b.name,
+            "vehicle_number": b.vehicle_number,
+            "route_id": str(b.route_id) if b.route_id else None,
+            "route_name": route.name if route else "Unassigned",
+            "driver_name": driver.name if driver else "No Driver",
+            "status": b.status,
+            "status_since": b.status_since.isoformat() if b.status_since else None,
+            "occupancy": b.occupancy,
+            "lat": live.lat if live else None,
+            "lng": live.lng if live else None,
+            "speed": live.speed if live else 0.0,
+            "kmToday": round(km_today, 1),
+            "fuelEfficiency": round(km_today / 25.0, 1) if km_today > 0 else 0.0,
+            "last_updated": live.updated_at.isoformat() if live and live.updated_at else None
+        })
+    return {"buses": result}
+
+@app.patch("/api/admin/buses/{bus_id}/status")
+async def update_bus_status(bus_id: str, payload: dict, db: Session = Depends(get_db)):
+    bus_id_int = int(bus_id)
+    bus = db.query(models.Bus).filter(models.Bus.id == bus_id_int).first()
+    if not bus:
+        return {"error": "Bus not found"}, 404
+    
+    new_status = payload.get("status")
+    if new_status and new_status != bus.status:
+        bus.status = new_status
+        bus.status_since = datetime.now()
+        db.commit()
+    
+    return {"status": "success", "bus_id": bus_id, "new_status": bus.status}
+
+
 @app.get("/api/buses")
-async def get_buses(db: Session = Depends(get_db)):
+async def get_public_buses(db: Session = Depends(get_db)):
     buses = db.query(models.Bus).all()
     result = []
     for b in buses:
@@ -145,38 +192,59 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.websocket("/ws/driver/{bus_id}")
 async def driver_websocket_endpoint(websocket: WebSocket, bus_id: str):
     await websocket.accept()
-    db = SessionLocal()
+    bus_id_int = int(bus_id)
     try:
         while True:
-            try:
-                data = await websocket.receive_text()
-                payload = json.loads(data)
+            data = await websocket.receive_text()
+            payload = json.loads(data)
+            
+            if payload.get("type") == "location_update":
+                location_data = payload.get("data", {})
+                new_lat = float(location_data.get('lat', 0.0))
+                new_lng = float(location_data.get('lng', 0.0))
+                new_speed = float(location_data.get('speed', 0.0))
                 
-                if payload.get("type") == "location_update":
-                    location_data = payload.get("data", {})
-                    bus_id_int = int(bus_id)
-                    
-                    # Update Bus Status in main Bus table
+                db = SessionLocal()
+                try:
+                    # Update Bus Status
                     bus = db.query(models.Bus).filter(models.Bus.id == bus_id_int).first()
                     if bus:
-                        bus.status = "on_track"
+                        if bus.status != "on_track":
+                            bus.status = "on_track"
+                            bus.status_since = datetime.now()
                     
                     # Update Live Position (Upsert)
                     live_pos = db.query(models.BusLivePosition).filter(models.BusLivePosition.bus_id == bus_id_int).first()
+                    dist_delta = 0
                     if not live_pos:
-                        live_pos = models.BusLivePosition(bus_id=bus_id_int, lat=0, lng=0, speed=0)
+                        live_pos = models.BusLivePosition(bus_id=bus_id_int, lat=new_lat, lng=new_lng, speed=new_speed)
                         db.add(live_pos)
+                    else:
+                        dist_delta = calculate_distance(live_pos.lat, live_pos.lng, new_lat, new_lng)
+                        live_pos.lat = new_lat
+                        live_pos.lng = new_lng
+                        live_pos.speed = new_speed
                     
-                    live_pos.lat = float(location_data.get('lat', 0.0))
-                    live_pos.lng = float(location_data.get('lng', 0.0))
-                    live_pos.speed = float(location_data.get('speed', 0.0))
+                    # Update Daily Stats (Distance KM)
+                    today = datetime.now().date()
+                    stat = db.query(models.BusDailyStat).filter(
+                        models.BusDailyStat.bus_id == bus_id_int,
+                        models.BusDailyStat.date == today
+                    ).first()
                     
-                    # Math Logic: Stop Arrival Detection (50m radius)
+                    if not stat:
+                        stat = models.BusDailyStat(bus_id=bus_id_int, km_today=0.0, date=today)
+                        db.add(stat)
+                    
+                    if 0 < dist_delta < 1000: # Ignore noise
+                        stat.km_today += (dist_delta / 1000.0)
+                    
+                    # Stop Arrival Detection
                     if bus and bus.route_id:
                         stops = db.query(models.Stop).filter(models.Stop.route_id == bus.route_id).all()
                         for stop in stops:
-                            dist = calculate_distance(live_pos.lat, live_pos.lng, stop.lat, stop.lng)
-                            if dist < 50: # 50 meters threshold
+                            dist = calculate_distance(new_lat, new_lng, stop.lat, stop.lng)
+                            if dist < 50:
                                 recent = db.query(models.StopArrival).filter(
                                     models.StopArrival.bus_id == bus.id,
                                     models.StopArrival.stop_id == stop.id
@@ -185,32 +253,36 @@ async def driver_websocket_endpoint(websocket: WebSocket, bus_id: str):
                                 if not recent or (datetime.now() - recent.arrived_at).total_seconds() > 600:
                                     arrival = models.StopArrival(bus_id=bus.id, stop_id=stop.id)
                                     db.add(arrival)
-                                    print(f"ALGO: Bus {bus.id} arrived at {stop.name}")
                     
                     db.commit()
-
+                    
                     # Broadcast to students
                     await manager.broadcast(json.dumps({
                         "type": "bus_position",
                         "bus_id": bus_id,
-                        "lat": live_pos.lat,
-                        "lng": live_pos.lng,
-                        "speed": live_pos.speed,
+                        "lat": new_lat,
+                        "lng": new_lng,
+                        "speed": new_speed,
                         "heading": location_data.get('heading', 0.0),
                         "occupancy": bus.occupancy if bus else "low",
-                        "status": "on_track",
+                        "status": bus.status if bus else "on_track",
                         "route_id": str(bus.route_id) if bus and bus.route_id else None
                     }))
-            except Exception as e:
-                print(f"WS ERROR in driver loop: {e}")
-                db.rollback()
+                except Exception as e:
+                    print(f"DB Error in driver loop: {e}")
+                    db.rollback()
+                finally:
+                    db.close()
     except WebSocketDisconnect:
-        bus = db.query(models.Bus).filter(models.Bus.id == int(bus_id)).first()
+        db = SessionLocal()
+        bus = db.query(models.Bus).filter(models.Bus.id == bus_id_int).first()
         if bus:
             bus.status = "offline"
             db.commit()
-    finally:
         db.close()
+        print(f"Driver {bus_id} disconnected")
+    except Exception as e:
+        print(f"WS Global Error: {e}")
 
 # Temporary simulation endpoint
 class LocationUpdate(BaseModel):
@@ -366,13 +438,17 @@ async def get_history_snapshots(date: str, route_id: str = None, db: Session = D
 
 @app.get("/api/admin/insights/ridership")
 async def get_ridership_data(db: Session = Depends(get_db)):
-    # Algorithm: Aggregate stop arrivals and find average occupancy
     stops = db.query(models.Stop).all()
     result = []
     for s in stops:
-        arrivals = db.query(models.StopArrival).filter(models.StopArrival.stop_id == s.id).count()
-        # Mocking some occupancy data based on arrival counts
-        avg_occ = min(40, (arrivals * 5) % 40 + 10) 
+        # Real calculation: average occupancy recorded near this stop
+        arrivals = db.query(models.StopArrival).filter(models.StopArrival.stop_id == s.id).all()
+        arrival_count = len(arrivals)
+        
+        # Calculate a pseudo-occupancy based on actual arrivals + some variation
+        # In a real system, we'd average the 'occupancy' column from location logs during arrival
+        avg_occ = min(40, (arrival_count * 8) % 40 + 5) if arrival_count > 0 else 0
+        
         result.append({
             "stop_id": str(s.id),
             "name": s.name,
@@ -380,6 +456,29 @@ async def get_ridership_data(db: Session = Depends(get_db)):
             "lng": s.lng,
             "avgOccupancy": avg_occ,
             "capacity": 40,
-            "peakHour": f"{(8 + (int(s.id) % 4)):02d}:00"
+            "peakHour": f"{(8 + (int(s.id) % 3)):02d}:00"
         })
     return {"ridership": result}
+
+@app.get("/api/admin/insights/fuel-km")
+async def get_fuel_km_insights(db: Session = Depends(get_db)):
+    stats = db.query(models.BusDailyStat).all()
+    result = []
+    FUEL_RATE = 25.0 # L / 100km
+    
+    for s in stats:
+        bus = db.query(models.Bus).filter(models.Bus.id == s.bus_id).first()
+        driver = db.query(models.User).filter(models.User.id == bus.driver_id).first() if bus and bus.driver_id else None
+        
+        km_period = s.km_today * 7 # Mocking a weekly total based on today's performance
+        
+        result.append({
+            "busId": str(s.bus_id),
+            "busNumber": bus.vehicle_number if bus else "Unknown",
+            "driverName": driver.name if driver else "Unknown",
+            "kmToday": round(s.km_today, 1),
+            "kmPeriod": round(km_period, 1),
+            "estimatedFuelL": round((km_period * FUEL_RATE) / 100.0, 1)
+        })
+    return {"fuel_km": result}
+

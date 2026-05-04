@@ -2,38 +2,38 @@
 
 :root {
   /* ── Typography ── */
-  --font-headline: 'Manrope', sans-serif;
-  --font-body:     'Inter', sans-serif;
+  --font-headline: 'Sora', sans-serif;
+  --font-body:     'Sora', sans-serif;
 
   /* ── Brand ── */
-  --brand-navy:          #1B263B;   /* Deep Navy — primary dark surface */
-  --brand-red:           #E63946;   /* Vibrant Red — primary CTA, active states */
-  --brand-red-light:     #FDECEA;   /* Red tint — badge backgrounds, alerts */
-  --brand-red-hover:     #CC2F3C;   /* Hover state for red buttons */
+  --brand-navy:          #030213;   /* Deep Navy */
+  --brand-red:           #2563eb;   /* Primary Blue */
+  --brand-red-light:     #dbeafe;   /* Light Blue tint */
+  --brand-red-hover:     #1d4ed8;   /* Darker Blue hover */
 
   /* ── Base Surfaces ── */
-  --bg-primary:          #F4F6FA;   /* App background — warm off-white */
-  --bg-secondary:        #FFFFFF;   /* Cards, bottom sheet, modals */
-  --bg-tertiary:         #EEF1F7;   /* Input fields, inactive tabs */
-  --bg-navy-card:        #1B263B;   /* Dark navy card (My Bus Card dark section) */
-  --surface-overlay:     rgba(255, 255, 255, 0.78);  /* Glassmorphism bars */
-  --border:              #DDE3EE;   /* Card borders, dividers */
-  --shadow-sm:           rgba(27, 38, 59, 0.06);
-  --shadow-md:           rgba(27, 38, 59, 0.12);
-  --shadow-lg:           rgba(27, 38, 59, 0.20);
+  --bg-primary:          #ffffff;   /* Pure White */
+  --bg-secondary:        #ffffff;
+  --bg-tertiary:         #f3f3f5;   /* Inputs, muted zones */
+  --bg-navy-card:        #030213;
+  --surface-overlay:     rgba(255, 255, 255, 0.78);
+  --border:              oklch(0.95 0.0058 264.53); /* Icy blue-gray */
+  --shadow-sm:           rgba(3, 2, 19, 0.06);
+  --shadow-md:           rgba(3, 2, 19, 0.12);
+  --shadow-lg:           rgba(3, 2, 19, 0.20);
 
   /* ── Text ── */
-  --text-primary:        #1B263B;   /* Headings — same as brand navy */
-  --text-secondary:      #4A5568;   /* Body, descriptions */
-  --text-muted:          #8E9BBC;   /* Timestamps, placeholders, captions */
-  --text-inverse:        #FFFFFF;   /* Text on dark/red surfaces */
-  --text-on-red:         #FFFFFF;   /* Text on brand-red */
+  --text-primary:        oklch(0.145 0 0);   /* Rich charcoal */
+  --text-secondary:      #4A5568;
+  --text-muted:          #717182;   /* Muted text */
+  --text-inverse:        #ffffff;
+  --text-on-red:         #ffffff;
 
   /* ── Accent / Interactive ── */
-  --accent-primary:      #E63946;   /* Primary CTA, active nav dot, ETA badge */
-  --accent-primary-bg:   #FDECEA;   /* Light red backgrounds */
-  --accent-hover:        #CC2F3C;
-  --accent-secondary:    #1B263B;   /* Navy — secondary buttons, headers */
+  --accent-primary:      #2563eb;   /* Blue CTA */
+  --accent-primary-bg:   #dbeafe;
+  --accent-hover:        #1d4ed8;
+  --accent-secondary:    #030213;
 
   /* ── Status ── */
   --success:             #16A34A;
@@ -46,26 +46,26 @@
   --info-bg:             #DBEAFE;
 
   /* ── Map ── */
-  --route-line:          rgba(230, 57, 70, 0.65);   /* Red route polyline */
+  --route-line:          rgba(37, 99, 235, 0.65);   /* Blue route polyline */
   --route-line-passed:   rgba(142, 155, 188, 0.40);
-  --stop-pin-active:     #E63946;
+  --stop-pin-active:     #2563eb;
   --stop-pin-default:    #8E9BBC;
   --stop-pin-done:       #DDE3EE;
   --bus-ring:            #FFFFFF;
-  --user-dot:            #E63946;
-  --user-dot-ring:       rgba(230, 57, 70, 0.22);
+  --user-dot:            #2563eb;
+  --user-dot-ring:       rgba(37, 99, 235, 0.22);
 
   /* ── Navigation ── */
   --nav-bg:              #FFFFFF;
-  --nav-border:          #DDE3EE;
-  --nav-active:          #E63946;
+  --nav-border:          oklch(0.95 0.0058 264.53);
+  --nav-active:          #2563eb;
   --nav-inactive:        #8E9BBC;
 
   /* ── Border Radius ── */
-  --radius-sm:   0.5rem;    /* 8px  */
-  --radius-md:   0.75rem;   /* 12px */
-  --radius-lg:   1rem;      /* 16px — primary "Soft Institutional" */
-  --radius-xl:   1.25rem;   /* 20px */
+  --radius-sm:   0.375rem;  /* 6px  */
+  --radius-md:   0.5rem;    /* 8px  */
+  --radius-lg:   0.625rem;  /* 10px — primary base */
+  --radius-xl:   0.875rem;  /* 14px */
   --radius-full: 9999px;
 
   /* ── Shadow System ── */
@@ -87,33 +87,33 @@
 
 [data-theme="dark"] {
   /* ── Brand ── */
-  --brand-navy:          #1B263B;
-  --brand-red:           #FF6B74;   /* Lighter red — better contrast on dark */
-  --brand-red-light:     #2D1215;
-  --brand-red-hover:     #FF8A91;
+  --brand-navy:          oklch(0.145 0 0);
+  --brand-red:           #3b82f6;   /* Blue for dark mode */
+  --brand-red-light:     #1e3a8a;
+  --brand-red-hover:     #60a5fa;
 
   /* ── Base Surfaces ── */
-  --bg-primary:          #0E1623;   /* Deeper than navy — true dark background */
-  --bg-secondary:        #1B263B;   /* Deep Navy — card surface */
-  --bg-tertiary:         #243347;   /* Slightly lighter — inputs, inactive */
-  --bg-navy-card:        #243347;
-  --surface-overlay:     rgba(14, 22, 35, 0.82);
-  --border:              #2A3F5C;
+  --bg-primary:          oklch(0.145 0 0);   /* Dark charcoal */
+  --bg-secondary:        oklch(0.145 0 0);   
+  --bg-tertiary:         oklch(0.269 0 0);   /* Mid-tone gray */
+  --bg-navy-card:        oklch(0.269 0 0);
+  --surface-overlay:     rgba(37, 37, 37, 0.82);
+  --border:              oklch(0.269 0 0);
   --shadow-sm:           rgba(0, 0, 0, 0.20);
   --shadow-md:           rgba(0, 0, 0, 0.35);
   --shadow-lg:           rgba(0, 0, 0, 0.50);
 
   /* ── Text ── */
-  --text-primary:        #E8EDF5;
+  --text-primary:        oklch(0.985 0 0);   /* Off-white */
   --text-secondary:      #8E9BBC;
-  --text-muted:          #4A5E7A;
-  --text-inverse:        #0E1623;
-  --text-on-red:         #FFFFFF;
+  --text-muted:          oklch(0.6 0 0);
+  --text-inverse:        oklch(0.145 0 0);
+  --text-on-red:         #ffffff;
 
   /* ── Accent / Interactive ── */
-  --accent-primary:      #FF6B74;
-  --accent-primary-bg:   #2D1215;
-  --accent-hover:        #FF8A91;
+  --accent-primary:      #3b82f6;
+  --accent-primary-bg:   #1e3a8a;
+  --accent-hover:        #60a5fa;
   --accent-secondary:    #8E9BBC;
 
   /* ── Status ── */
@@ -127,19 +127,19 @@
   --info-bg:             #1E3A5F;
 
   /* ── Map ── */
-  --route-line:          rgba(255, 107, 116, 0.70);
+  --route-line:          rgba(59, 130, 246, 0.70);
   --route-line-passed:   rgba(42, 63, 92, 0.60);
-  --stop-pin-active:     #FF6B74;
+  --stop-pin-active:     #3b82f6;
   --stop-pin-default:    #4A5E7A;
   --stop-pin-done:       #2A3F5C;
   --bus-ring:            #1B263B;
-  --user-dot:            #FF6B74;
-  --user-dot-ring:       rgba(255, 107, 116, 0.20);
+  --user-dot:            #3b82f6;
+  --user-dot-ring:       rgba(59, 130, 246, 0.20);
 
   /* ── Navigation ── */
   --nav-bg:              #1B263B;
   --nav-border:          #2A3F5C;
-  --nav-active:          #FF6B74;
+  --nav-active:          #3b82f6;
   --nav-inactive:        #4A5E7A;
 }
 
@@ -152,26 +152,57 @@
   --color-border: var(--border);
 }
 
-/* Global Typography */
-body {
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.6;
+/* Global Typography & Layout */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+#root {
+  height: 100%;
 }
 
-h1, h2, h3, .headline {
-  font-family: var(--font-headline);
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
 }
+
+h1, .text-2xl { font-size: 1.5rem; font-weight: 500; line-height: 1.5; font-family: var(--font-headline); }
+h2, .text-xl  { font-size: 1.25rem; font-weight: 500; line-height: 1.5; font-family: var(--font-headline); }
+h3, .text-lg  { font-size: 1.125rem; font-weight: 500; line-height: 1.5; font-family: var(--font-headline); }
+h4, label, button { font-size: 1rem; font-weight: 500; line-height: 1.5; }
+input { font-size: 1rem; font-weight: 400; line-height: 1.5; }
 
 /* Smooth transitions for theme switching */
 *, *::before, *::after {
-  transition: background-color 250ms ease, 
-              color 200ms ease, 
-              border-color 200ms ease,
-              box-shadow 200ms ease;
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
 }
 
 /* Custom Animations */
+@keyframes pulse-custom {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.92); }
+}
+.animate-pulse-custom {
+  animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientBG 5s ease infinite;
+}
+
 @keyframes ripple {
   0% { transform: scale(0.8); opacity: 1; }
   100% { transform: scale(2.4); opacity: 0; }

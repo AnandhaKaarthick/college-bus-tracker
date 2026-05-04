@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Text, Enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Text, Enum, Date
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from database import Base
 
 class User(Base):
@@ -44,6 +45,7 @@ class Bus(Base):
     route_id = Column(Integer, ForeignKey("routes.id"), nullable=True)
     driver_id = Column(Integer, ForeignKey("users.id"), nullable=True, unique=True)
     status = Column(String(20), default="offline") # on_track, delayed, idle, offline
+    status_since = Column(DateTime(timezone=True), server_default=func.now())
     occupancy = Column(String(20), default="low") # low, medium, full
     capacity = Column(Integer, default=40)
     is_active = Column(Boolean, default=True)
@@ -98,8 +100,9 @@ class Message(Base):
 
 class BusDailyStat(Base):
     __tablename__ = "bus_daily_stats"
-    bus_id = Column(Integer, ForeignKey("buses.id"), primary_key=True)
-    date = Column(DateTime(timezone=True), primary_key=True, server_default=func.now())
+    id = Column(Integer, primary_key=True, index=True)
+    bus_id = Column(Integer, ForeignKey("buses.id"))
+    date = Column(Date, default=datetime.now().date)
     km_today = Column(Float, default=0.0)
 
 class RouteSchedule(Base):

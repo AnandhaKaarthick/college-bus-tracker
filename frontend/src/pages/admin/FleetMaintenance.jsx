@@ -11,17 +11,10 @@ export default function FleetMaintenance() {
   useEffect(() => {
     const fetchFleet = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/buses');
+        const res = await fetch('http://localhost:8000/api/admin/buses');
         if (res.ok) {
           const data = await res.json();
-          // Simulating some historical stats for the algorithm
-          const enhancedFleet = data.buses.map(bus => ({
-            ...bus,
-            kmToday: Math.floor(Math.random() * 100) + 50,
-            maintenanceDue: Math.random() > 0.8,
-            fuelEfficiency: (Math.random() * 2 + 3).toFixed(1) // km/L
-          }));
-          setFleet(enhancedFleet);
+          setFleet(data.buses);
         }
         setIsLoading(false);
       } catch (err) {

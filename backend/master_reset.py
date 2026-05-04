@@ -1,6 +1,7 @@
 import json
 import httpx
 import models
+from datetime import datetime
 from database import SessionLocal, engine, Base
 
 def reset_and_sync():
@@ -80,10 +81,20 @@ def reset_and_sync():
             status="offline"
         )
         db.add(bus)
+        
+        # Initialize Daily Stats
+        today = datetime.now().date()
+        stat = models.BusDailyStat(bus_id=idx, km_today=0.0, date=today)
+        db.add(stat)
+        
+        # Add some initial stop arrivals for the heatmap
+        for s_idx, stop in enumerate(stops_data[:3]):
+            arrival = models.StopArrival(bus_id=idx, stop_id=s_idx+1) 
+            db.add(arrival)
     
     db.commit()
     db.close()
-    print("\n✨ MULTI-ROUTE MASTER RESET COMPLETE!")
+    print("\nMULTI-ROUTE MASTER RESET COMPLETE!")
 
 if __name__ == "__main__":
     reset_and_sync()
