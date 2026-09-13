@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import RouteGrid from './components/RouteGrid';
 import LiveMapPanel from './components/LiveMapPanel';
 import BusTelemetryModal from './components/BusTelemetryModal';
+import { API_BASE_URL, WS_BASE_URL } from '../../config';
 
 export default function ActiveRoutesMonitor() {
   const [routes, setRoutes] = useState([]);
@@ -13,7 +14,7 @@ export default function ActiveRoutesMonitor() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/routes');
+        const res = await fetch(`${API_BASE_URL}/api/routes`);
         if (res.ok) {
           const data = await res.json();
           setRoutes(data.routes);
@@ -27,7 +28,7 @@ export default function ActiveRoutesMonitor() {
     fetchData();
 
     // WebSocket for live bus positions
-    const ws = new WebSocket('ws://localhost:8000/ws/buses');
+    const ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'bus_position') {

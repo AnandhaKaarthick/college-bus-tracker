@@ -5,6 +5,7 @@ import BottomSheet from "../components/BottomSheet";
 import StopStepper from "../components/tracking/StopStepper";
 import StopDetailModal from "../components/tracking/StopDetailModal";
 import { useBusContext } from "../context/BusContext";
+import { API_BASE_URL, WS_BASE_URL } from "../config";
 
 const DUMMY_STOPS = [
   { stop_id: 1, name: "Ayapakkam Bus Stand", arrival_time: "07:00" },
@@ -28,7 +29,7 @@ export default function TrackingPage() {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/routes');
+        const res = await fetch(`${API_BASE_URL}/api/routes`);
         const data = await res.json();
         setAvailableRoutes(data.routes);
         const route = data.routes.find(r => String(r.id) === String(selectedRouteId));
@@ -42,7 +43,7 @@ export default function TrackingPage() {
 
   useEffect(() => {
     // Listen for updates for the currently selected route's bus
-    const ws = new WebSocket('ws://localhost:8000/ws/buses');
+    const ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'bus_position' && String(msg.route_id) === String(selectedRouteId)) {

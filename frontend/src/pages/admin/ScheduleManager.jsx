@@ -3,6 +3,7 @@ import {
   Clock, Timer, Calendar, Save, 
   ChevronRight, AlertTriangle, CheckCircle2 
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 export default function ScheduleManager() {
   const [routes, setRoutes] = useState([]);
@@ -15,7 +16,7 @@ export default function ScheduleManager() {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/routes');
+        const res = await fetch(`${API_BASE_URL}/api/routes`);
         if (res.ok) {
           const data = await res.json();
           setRoutes(data.routes);

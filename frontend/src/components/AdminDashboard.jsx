@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { Activity, Shield, Users, Navigation } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from './ThemeToggleButton';
+import { API_BASE_URL, WS_BASE_URL } from '../config';
 
 function MapFixes() {
   const map = useMap();
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchBuses = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/buses');
+        const response = await fetch(`${API_BASE_URL}/api/buses`);
         if (response.ok) {
           const data = await response.json();
           const busesObj = {};
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
     };
     fetchBuses();
 
-    const ws = new WebSocket('ws://localhost:8000/ws/buses');
+    const ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'bus_position') {

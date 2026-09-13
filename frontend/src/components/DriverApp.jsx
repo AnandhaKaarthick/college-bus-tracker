@@ -4,6 +4,7 @@ import {
   MessageSquare, AlertTriangle, Send, Phone, 
   Info, Zap, ChevronRight, User, Settings
 } from 'lucide-react';
+import { WS_BASE_URL } from '../config';
 
 export default function DriverApp() {
   const [activeTab, setActiveTab] = useState('trip');
@@ -18,7 +19,7 @@ export default function DriverApp() {
   
   useEffect(() => {
     if (isBroadcasting) {
-      wsRef.current = new WebSocket('ws://localhost:8000/ws/driver/1');
+      wsRef.current = new WebSocket(`${WS_BASE_URL}/ws/driver/1`);
       wsRef.current.onerror = () => setError('Connection lost. Reconnecting...');
       return () => { if (wsRef.current) wsRef.current.close(); };
     }

@@ -8,6 +8,7 @@ import {
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../../config';
 
 export default function InsightsDashboard() {
   const [activeTab, setActiveTab] = useState('efficiency');
@@ -17,7 +18,7 @@ export default function InsightsDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/admin/insights/fuel-km');
+        const res = await fetch(`${API_BASE_URL}/api/admin/insights/fuel-km`);
         if (res.ok) {
           const data = await res.json();
           const list = data.fuel_km || [];
@@ -215,7 +216,7 @@ function RidershipHeatmapView() {
   useEffect(() => {
     const fetchRidership = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/admin/insights/ridership');
+        const res = await fetch(`${API_BASE_URL}/api/admin/insights/ridership`);
         if (res.ok) {
           const data = await res.json();
           setRidership(data.ridership || []);

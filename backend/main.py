@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import json
 import asyncio
 from typing import List
-from database import get_db, SessionLocal
+from database import get_db, SessionLocal, engine, Base
 import models
 import math
 from datetime import datetime
@@ -76,6 +76,22 @@ async def archive_locations_task():
 
 @app.on_event("startup")
 async def startup_event():
+    # Ensure database schema is created
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        if db.query(models.Route).count() == 0:
+            print("No routes found in database. Initializing default route data...")
+            try:
+                from init_db import init_db
+                init_db(drop=False)
+            except Exception as e:
+                print(f"Error seeding default routes: {e}")
+    except Exception as e:
+        print(f"Startup DB check error: {e}")
+    finally:
+        db.close()
+
     asyncio.create_task(archive_locations_task())
 
 @app.get("/")

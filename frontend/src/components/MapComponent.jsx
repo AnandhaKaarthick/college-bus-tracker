@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, Phone, Navigation, AlertTriangle, Users, ChevronRight, X, Info, Clock, MapPin, User } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from './ThemeToggleButton';
+import { API_BASE_URL, WS_BASE_URL } from '../config';
 
 // --- LEAFLET ASSET FIX ---
 delete L.Icon.Default.prototype._getIconUrl;
@@ -76,8 +77,8 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
     const init = async () => {
       try {
         const [routesRes, busesRes] = await Promise.all([
-          fetch('http://localhost:8000/api/routes'),
-          fetch('http://localhost:8000/api/buses')
+          fetch(`${API_BASE_URL}/api/routes`),
+          fetch(`${API_BASE_URL}/api/buses`)
         ]);
         const routesData = await routesRes.json();
         const busesData = await busesRes.json();
@@ -89,7 +90,7 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
     };
     init();
 
-    const ws = new WebSocket('ws://localhost:8000/ws/buses');
+    const ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'bus_position') {

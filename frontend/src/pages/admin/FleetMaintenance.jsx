@@ -3,6 +3,7 @@ import {
   Trophy, AlertTriangle, CheckCircle2, 
   TrendingUp, Fuel, Timer, Settings2 
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 export default function FleetMaintenance() {
   const [fleet, setFleet] = useState([]);
@@ -11,7 +12,7 @@ export default function FleetMaintenance() {
   useEffect(() => {
     const fetchFleet = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/admin/buses');
+        const res = await fetch(`${API_BASE_URL}/api/admin/buses`);
         if (res.ok) {
           const data = await res.json();
           setFleet(data.buses);

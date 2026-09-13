@@ -2,8 +2,9 @@ import json
 from database import SessionLocal, engine
 import models
 
-def init_db():
-    models.Base.metadata.drop_all(bind=engine)
+def init_db(drop=False):
+    if drop:
+        models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
     
     db = SessionLocal()
