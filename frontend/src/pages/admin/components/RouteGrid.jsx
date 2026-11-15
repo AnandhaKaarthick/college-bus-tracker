@@ -1,6 +1,6 @@
-import { Navigation } from 'lucide-react';
+import { Navigation, Trash2 } from 'lucide-react';
 
-export default function RouteGrid({ routes, selectedRouteId, onRouteSelect, buses, isLoading }) {
+export default function RouteGrid({ routes, selectedRouteId, onRouteSelect, onDeleteRoute, buses, isLoading }) {
   if (isLoading) {
     return (
       <div className="p-4 space-y-4">
@@ -31,10 +31,10 @@ export default function RouteGrid({ routes, selectedRouteId, onRouteSelect, buse
         const activeBuses = buses.filter(b => b.route_id === route.id && b.status === 'on_track').length;
         
         return (
-          <button
+          <div
             key={route.id}
             onClick={() => onRouteSelect(route.id)}
-            className={`w-full text-left p-5 rounded-3xl transition-all border group ${
+            className={`w-full text-left p-5 rounded-3xl transition-all border group cursor-pointer ${
               isActive 
                 ? 'bg-[var(--bg-secondary)] border-[var(--accent-primary)] ring-4 ring-blue-500/10 shadow-xl' 
                 : 'bg-[var(--bg-tertiary)] border-[var(--border)] hover:border-[var(--accent-primary)]/50 shadow-sm'
@@ -44,10 +44,24 @@ export default function RouteGrid({ routes, selectedRouteId, onRouteSelect, buse
               <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-muted)] group-hover:text-[var(--accent-primary)]'}`}>
                 <Navigation size={18} />
               </div>
-              <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${
-                activeBuses > 0 ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-[var(--bg-secondary)] text-[var(--text-muted)]'
-              }`}>
-                {activeBuses} Units Live
+              <div className="flex items-center gap-2">
+                <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+                  activeBuses > 0 ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-[var(--bg-secondary)] text-[var(--text-muted)]'
+                }`}>
+                  {activeBuses} Units Live
+                </div>
+                {onDeleteRoute && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteRoute(route);
+                    }}
+                    title="Delete this route"
+                    className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
             
@@ -60,7 +74,7 @@ export default function RouteGrid({ routes, selectedRouteId, onRouteSelect, buse
               <div className="w-1 h-1 rounded-full bg-[var(--border)]" />
               <span>{route.endStop}</span>
             </div>
-          </button>
+          </div>
         );
       })}
     </div>

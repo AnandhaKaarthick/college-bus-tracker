@@ -93,6 +93,9 @@ export default function RouteCreatorStudio() {
   const [routeColor, setRouteColor] = useState('#3B82F6');
   const [selectedBusId, setSelectedBusId] = useState('');
   const [availableBuses, setAvailableBuses] = useState([]);
+  const [existingRoutes, setExistingRoutes] = useState([]);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   
   // Stops & Geometry State
   const [stops, setStops] = useState([]);
@@ -120,7 +123,34 @@ export default function RouteCreatorStudio() {
       }
     };
     fetchBuses();
-  }, []);
+    fetchExistingRoutes();
+  }, [successData]);
+
+  const fetchExistingRoutes = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/routes`);
+      if (res.ok) {
+        const data = await res.json();
+        setExistingRoutes(data.routes || []);
+      }
+    } catch (err) {
+      console.error("Error fetching routes in studio:", err);
+    }
+  };
+
+  const handleDeleteRoute = async (routeId) => {
+    setDeletingId(routeId);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/routes/${routeId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setExistingRoutes(prev => prev.filter(r => r.id !== String(routeId)));
+      }
+    } catch (e) {
+      console.error("Error deleting route:", e);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   // Compute road snapping via OSRM whenever stops change (>= 2 stops)
   useEffect(() => {
@@ -299,10 +329,18 @@ export default function RouteCreatorStudio() {
           </div>
         </div>
 
-        {/* Quick Demo Presets */}
+        {/* Action Controls & Presets */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowManageModal(true)}
+            className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1.5 mr-2"
+          >
+            <Trash2 size={13} />
+            <span>Manage / Delete ({existingRoutes.length})</span>
+          </button>
+
           <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] mr-1 hidden lg:inline">
-            Quick Presets:
+            Presets:
           </span>
           {PRESETS.map((p, idx) => (
             <button
@@ -311,7 +349,7 @@ export default function RouteCreatorStudio() {
               className="px-3.5 py-2 rounded-xl text-xs font-bold border border-[var(--border)] bg-[var(--bg-tertiary)] hover:border-blue-500 text-[var(--text-primary)] transition-all flex items-center gap-1.5"
             >
               <Sparkles size={13} className="text-amber-400" />
-              <span>{p.name.split(' ')[0]} Line</span>
+              <span>{p.name.split(' ')[0]}</span>
             </button>
           ))}
         </div>
@@ -558,6 +596,60 @@ export default function RouteCreatorStudio() {
         </div>
 
       </div>
+
+      {/* MANAGE / DELETE EXISTING ROUTES MODAL */}
+      {showManageModal && (
+        <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[var(--bg-secondary)] rounded-[40px] border border-[var(--border)] p-8 max-w-xl w-full shadow-2xl space-y-6">
+            <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
+              <div>
+                <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Active Transit Routes</h3>
+                <p className="text-xs font-semibold text-[var(--text-muted)]">Manage or delete existing routes across the network</p>
+              </div>
+              <button 
+                onClick={() => setShowManageModal(false)}
+                className="p-2 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              {existingRoutes.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[var(--text-muted)]">No active routes found.</div>
+              ) : (
+                existingRoutes.map(r => (
+                  <div key={r.id} className="p-4 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border)] flex justify-between items-center group">
+                    <div className="space-y-1">
+                      <div className="font-black text-sm text-[var(--text-primary)]">{r.name}</div>
+                      <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                        {r.stops?.length || 0} Stops • From {r.startStop} to {r.endStop}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteRoute(r.id)}
+                      disabled={deletingId === r.id}
+                      className="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5"
+                    >
+                      <Trash2 size={13} />
+                      <span>{deletingId === r.id ? "Deleting..." : "Delete"}</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-[var(--border)] flex justify-end">
+              <button
+                onClick={() => setShowManageModal(false)}
+                className="py-3 px-6 rounded-2xl bg-[var(--bg-tertiary)] text-xs font-black uppercase text-[var(--text-primary)] hover:border-blue-500 border border-[var(--border)]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SUCCESS PUBLISHED MODAL */}
       {successData && (

@@ -367,6 +367,15 @@ async def delete_route(route_id: int, db: Session = Depends(get_db)):
     buses = db.query(models.Bus).filter(models.Bus.route_id == route_id).all()
     for b in buses:
         b.route_id = None
+
+    # Unassign users (students & drivers) from this route
+    users = db.query(models.User).filter(models.User.assigned_route_id == route_id).all()
+    for u in users:
+        u.assigned_route_id = None
+        u.assigned_stop_id = None
+        
+    # Delete route-specific announcements
+    db.query(models.Announcement).filter(models.Announcement.route_id == route_id).delete()
         
     # Delete schedules
     db.query(models.RouteSchedule).filter(models.RouteSchedule.route_id == route_id).delete()
@@ -377,6 +386,19 @@ async def delete_route(route_id: int, db: Session = Depends(get_db)):
     # Delete route
     db.delete(route)
     db.commit()
+
+    # Clean up routes_geometry.json
+    try:
+        geom_file = os.path.join(os.path.dirname(__file__), "routes_geometry.json")
+        if os.path.exists(geom_file):
+            with open(geom_file, "r", encoding="utf-8") as gf:
+                geom_data = json.load(gf)
+            if str(route_id) in geom_data:
+                del geom_data[str(route_id)]
+                with open(geom_file, "w", encoding="utf-8") as gf:
+                    json.dump(geom_data, gf)
+    except Exception as e:
+        print("Error removing from routes_geometry.json:", e)
     
     await manager.broadcast(json.dumps({
         "type": "route_deleted",
