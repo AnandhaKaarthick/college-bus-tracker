@@ -1,4 +1,4 @@
-import React from "react";
+
 
 const DUMMY_ALERTS = [
   { id: 1, type: "delay", icon: "⚠️", title: "Route Delay: West Gate", desc: "Bus 06 — 8 min delay · 2 min ago", pillType: "warning" },

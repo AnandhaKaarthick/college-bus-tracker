@@ -1,8 +1,12 @@
 import json
 import httpx
+import sys
 import models
 from datetime import datetime
 from database import SessionLocal, engine, Base
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 def reset_and_sync():
     print("Cleaning database...")
@@ -20,11 +24,11 @@ def reset_and_sync():
     for idx, filename in enumerate(route_files, start=1):
         try:
             path = f'../simulator/routes/{filename}'
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 route_config = json.load(f)
         except:
             path = f'simulator/routes/{filename}'
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 route_config = json.load(f)
 
         print(f"\n--- Processing Route {idx}: {route_config['route_name']} ---")

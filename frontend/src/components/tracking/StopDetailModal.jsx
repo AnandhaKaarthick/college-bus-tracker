@@ -1,8 +1,7 @@
-import React from "react";
 import { X, MapPin, Bell } from "lucide-react";
 import FeatureBadge from "../FeatureBadge";
 
-export default function StopDetailModal({ stop, busETA, walkETA, studentLocation, onClose, onSetAlert }) {
+export default function StopDetailModal({ stop, busETA, walkETA, onClose, onSetAlert }) {
   if (!stop) return null;
 
   // Recommendation logic

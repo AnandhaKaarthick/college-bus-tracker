@@ -1,4 +1,4 @@
-import React from "react";
+
 
 const CONTACTS = [
   { emoji: "🚔", name: "Campus Police",            phone: "+914423456789" },

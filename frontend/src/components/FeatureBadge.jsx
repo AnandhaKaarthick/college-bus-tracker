@@ -1,4 +1,4 @@
-import React from "react";
+
 
 const BADGE_CONFIG = {
   wifi:       { icon: "📶", label: "Live WiFi",     style: "info"    },

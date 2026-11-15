@@ -1,7 +1,6 @@
-import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Map as MapIcon, Navigation, ShieldCheck, User
+  LayoutDashboard, Navigation, ShieldCheck, User
 } from "lucide-react";
 import { useBusContext } from "../context/BusContext";
 

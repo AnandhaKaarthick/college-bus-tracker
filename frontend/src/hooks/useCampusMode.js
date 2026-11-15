@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import campusBoundary from "../data/rit_campus_boundary.json";
 
 /**
@@ -26,16 +25,12 @@ function pointInPolygon(lat, lng, polygon) {
 }
 
 export function useCampusMode(busLat, busLng) {
-  const [isOnCampus,  setIsOnCampus]  = useState(false);
-  const [campusZone,  setCampusZone]  = useState(null);
+  if (busLat == null || busLng == null) {
+    return { isOnCampus: false, campusZone: null };
+  }
 
-  useEffect(() => {
-    if (busLat == null || busLng == null) return;
-
-    const onCampus = pointInPolygon(busLat, busLng, campusBoundary);
-    setIsOnCampus(onCampus);
-    setCampusZone(onCampus ? "RIT" : null);
-  }, [busLat, busLng]);
+  const isOnCampus = pointInPolygon(busLat, busLng, campusBoundary);
+  const campusZone = isOnCampus ? "RIT" : null;
 
   return { isOnCampus, campusZone };
 }

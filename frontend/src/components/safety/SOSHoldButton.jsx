@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, useAnimation } from "framer-motion";
 
 const HOLD_DURATION = 3000;
@@ -10,6 +10,16 @@ export default function SOSHoldButton({ onSuccess }) {
   const startTime = useRef(null);
   const animFrame = useRef(null);
   const controls = useAnimation();
+
+  const triggerSOS = useCallback(() => {
+    setIsSending(true);
+    // Mock API call
+    setTimeout(() => {
+      setSent(true);
+      setIsSending(false);
+      onSuccess?.({ id: "8841", lat: 13.0827, lng: 80.2707 });
+    }, 500);
+  }, [onSuccess]);
 
   const startHold = useCallback(() => {
     if (sent || isSending) return;
@@ -27,7 +37,7 @@ export default function SOSHoldButton({ onSuccess }) {
       }
     };
     animFrame.current = requestAnimationFrame(tick);
-  }, [sent, isSending]);
+  }, [sent, isSending, triggerSOS]);
 
   const endHold = useCallback(() => {
     cancelAnimationFrame(animFrame.current);
@@ -40,16 +50,6 @@ export default function SOSHoldButton({ onSuccess }) {
       setProgress(0);
     }
   }, [progress, controls, sent]);
-
-  async function triggerSOS() {
-    setIsSending(true);
-    // Mock API call
-    setTimeout(() => {
-      setSent(true);
-      setIsSending(false);
-      onSuccess?.({ id: "8841", lat: 13.0827, lng: 80.2707 });
-    }, 500);
-  }
 
   // SVG ring calculation
   const RADIUS = 68;

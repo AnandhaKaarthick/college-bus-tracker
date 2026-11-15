@@ -1,5 +1,4 @@
-import React from 'react';
-import { Navigation, Users } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 
 export default function RouteGrid({ routes, selectedRouteId, onRouteSelect, buses, isLoading }) {
   if (isLoading) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Activity, Shield, Users, Navigation } from 'lucide-react';
@@ -127,8 +127,8 @@ export default function AdminDashboard() {
       <div className="flex-1 h-1/2 md:h-full relative z-0">
         <MapContainer center={collegePosition} zoom={15} className="h-full w-full" zoomControl={false}>
           <TileLayer
-            attribution='&copy; OpenStreetMap'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {Object.values(buses).filter(b => b.lat).map(bus => (
             <Marker key={bus.bus_id} position={[bus.lat, bus.lng]} icon={busIcon(occupancyColor(bus.occupancy))}>

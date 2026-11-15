@@ -1,8 +1,7 @@
-import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { 
-  Activity, Shield, Users, Navigation, 
-  MessageSquare, Settings, BarChart3, Bell, LogOut
+  Activity, Shield, Navigation, 
+  MessageSquare, BarChart3, Bell, LogOut
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggleButton from '../../components/ThemeToggleButton';
@@ -13,16 +12,6 @@ import CommunicationHub from './CommunicationHub';
 import ScheduleManager from './ScheduleManager';
 import InsightsDashboard from './InsightsDashboard';
 
-// Placeholder for sub-pages (will be implemented in next steps)
-const Placeholder = ({ title }) => (
-  <div className="flex-1 flex items-center justify-center bg-[var(--bg-primary)] text-[var(--text-muted)]">
-    <div className="text-center">
-      <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">{title}</h2>
-      <p className="text-sm italic">Module under construction...</p>
-    </div>
-  </div>
-);
-
 const NAV_ITEMS = [
   { id: 'monitor',     label: 'Live Monitor',   icon: Activity,      path: '/admin/monitor' },
   { id: 'dispatch',    label: 'Communication',  icon: MessageSquare, path: '/admin/communication' },
@@ -32,7 +21,7 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminHub() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 

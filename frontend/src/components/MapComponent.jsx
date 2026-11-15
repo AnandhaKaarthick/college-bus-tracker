@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, Phone, Navigation, AlertTriangle, Users, ChevronRight, X, Info, Clock, MapPin, User } from 'lucide-react';
+import { Search, Menu, Phone, Navigation, AlertTriangle, Users, ChevronRight, X, Info, Clock, User } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from './ThemeToggleButton';
 import { API_BASE_URL, WS_BASE_URL } from '../config';
@@ -62,16 +62,11 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
   const [buses, setBuses] = useState({});
   const [routes, setRoutes] = useState([]);
   const [selectedRouteId, setSelectedRouteId] = useState(initialRouteId);
-  const [selectedStopId, setSelectedStopId] = useState(null);
   const [sheetState, setSheetState] = useState('collapsed'); 
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
   
   const collegePosition = [13.0494, 80.0249];
-  
-  useEffect(() => {
-    if (initialRouteId) setSelectedRouteId(initialRouteId);
-  }, [initialRouteId]);
 
   useEffect(() => {
     const init = async () => {
@@ -146,8 +141,9 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
   }
 
   const handleStopTap = (stop) => {
-    const busEta = 5 + Math.floor(Math.random() * 15);
-    const walkEta = 8 + Math.floor(Math.random() * 5);
+    const stopIdNum = Number(stop.id) || 1;
+    const busEta = 5 + (stopIdNum * 3) % 15;
+    const walkEta = 8 + (stopIdNum * 2) % 5;
     setModalData({
         stop,
         bus_eta: busEta,
@@ -168,7 +164,7 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
   const mapContent = (
     <>
       <MapContainer center={collegePosition} zoom={13} className="h-full w-full" zoomControl={false}>
-        <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+        <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {selectedRoute && selectedRoute.polyline && (
           <Polyline positions={selectedRoute.polyline} color={theme === 'dark' ? '#60A5FA' : '#2563EB'} weight={6} opacity={0.6} />
         )}

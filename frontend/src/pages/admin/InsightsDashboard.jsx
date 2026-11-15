@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  BarChart3, TrendingUp, Fuel, Clock, 
-  Download, Filter, ChevronRight, BarChart,
-  Play, Pause, FastForward, Map as MapIcon,
-  Flame, History, Activity, Navigation
+  TrendingUp, Fuel, Clock, 
+  Download,
+  Flame
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
-import L from 'leaflet';
-import { motion, AnimatePresence } from 'framer-motion';
+import { MapContainer, TileLayer, Popup, CircleMarker } from 'react-leaflet';
 import { API_BASE_URL } from '../../config';
 
 export default function InsightsDashboard() {
@@ -230,13 +227,21 @@ function RidershipHeatmapView() {
     fetchRidership();
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[var(--accent-primary)]/20 border-t-[var(--accent-primary)] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 relative z-0">
         <MapContainer center={[13.0494, 80.0249]} zoom={13} className="h-full w-full" zoomControl={false}>
           <TileLayer
-            attribution='&copy; OpenStreetMap'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {ridership.map(stop => (
             <CircleMarker 

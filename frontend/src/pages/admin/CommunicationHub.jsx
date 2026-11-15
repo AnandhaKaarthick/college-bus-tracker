@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  Bell, MessageSquare, AlertCircle, 
-  Send, Users, Navigation, Phone, 
+  Bell, AlertCircle, 
+  Send, Navigation, Phone, 
   ShieldAlert, CheckCircle2 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -242,10 +242,8 @@ function EmergencyLogsPanel() {
 
 function SOSResponseOverlay({ alert, onDismiss }) {
   useEffect(() => {
-    // Math Logic: Frequency based alarm siren
-    // For now we just console log, but we could use Web Audio API
     console.log("ALGO: SOS Alarm triggered for Bus", alert.busNumber);
-  }, []);
+  }, [alert.busNumber]);
 
   return (
     <div className="fixed inset-0 z-[5000] flex items-center justify-center p-6 bg-red-600/20 backdrop-blur-md">

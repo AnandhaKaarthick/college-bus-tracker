@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import RouteGrid from './components/RouteGrid';
 import LiveMapPanel from './components/LiveMapPanel';
 import BusTelemetryModal from './components/BusTelemetryModal';

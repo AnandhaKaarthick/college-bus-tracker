@@ -1,58 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  Clock, Timer, Calendar, Save, 
-  ChevronRight, AlertTriangle, CheckCircle2 
+  Clock, Timer, Save, AlertTriangle 
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config';
 
+const MOCK_DELAYS = [
+  {
+    busNumber: 'TN-01-AB-1234',
+    stopName: 'Porur Junction',
+    scheduled: '08:30',
+    actual: '08:42',
+    delta: 12,
+    tag: 'Delayed'
+  },
+  {
+    busNumber: 'TN-01-CD-5678',
+    stopName: 'Main Gate',
+    scheduled: '08:45',
+    actual: '08:47',
+    delta: 2,
+    tag: 'On Time'
+  }
+];
+
 export default function ScheduleManager() {
   const [routes, setRoutes] = useState([]);
-  const [selectedRouteId, setSelectedRouteId] = useState(null);
+  const [selectedRouteId, setSelectedRouteId] = useState('');
   const [scheduleData, setScheduleData] = useState([]);
-  const [delayData, setDelayData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [delayData] = useState(MOCK_DELAYS);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchRoutes = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/routes`);
         if (res.ok) {
           const data = await res.json();
-          setRoutes(data.routes);
+          if (isMounted) {
+            setRoutes(data.routes);
+          }
         }
       } catch (err) { console.error("Error fetching routes:", err); }
     };
     fetchRoutes();
-    
-    // Mocking delay data for the algorithm demonstration
-    const mockDelays = [
-      {
-        busNumber: 'TN-01-AB-1234',
-        stopName: 'Porur Junction',
-        scheduled: '08:30',
-        actual: '08:42',
-        delta: 12,
-        tag: 'Delayed'
-      },
-      {
-        busNumber: 'TN-01-CD-5678',
-        stopName: 'Main Gate',
-        scheduled: '08:45',
-        actual: '08:47',
-        delta: 2,
-        tag: 'On Time'
-      }
-    ];
-    setDelayData(mockDelays);
-    setIsLoading(false);
+    return () => { isMounted = false; };
   }, []);
 
-  useEffect(() => {
-    if (selectedRouteId) {
-      const route = routes.find(r => r.id === selectedRouteId);
+  const handleSelectRoute = (routeId) => {
+    setSelectedRouteId(routeId);
+    if (routeId) {
+      const route = routes.find(r => r.id === routeId);
       if (route) {
-        // Mocking schedule data for editing
         const schedule = route.stops.map((stop, index) => ({
           id: stop.id,
           name: stop.name,
@@ -60,9 +59,13 @@ export default function ScheduleManager() {
           time: `08:${(index * 15).toString().padStart(2, '0')}`
         }));
         setScheduleData(schedule);
+      } else {
+        setScheduleData([]);
       }
+    } else {
+      setScheduleData([]);
     }
-  }, [selectedRouteId, routes]);
+  };
 
   const handleTimeChange = (id, newTime) => {
     setScheduleData(prev => prev.map(item => item.id === id ? { ...item, time: newTime } : item));
@@ -89,7 +92,8 @@ export default function ScheduleManager() {
               <div className="flex-1">
                 <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-2 block">Select Target Route</label>
                 <select 
-                  onChange={(e) => setSelectedRouteId(e.target.value)}
+                  value={selectedRouteId}
+                  onChange={(e) => handleSelectRoute(e.target.value)}
                   className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-4 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] transition-all appearance-none cursor-pointer"
                 >
                   <option value="">Choose a route...</option>

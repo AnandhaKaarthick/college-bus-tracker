@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "../components/PageHeader";
 import MapComponent from "../components/MapComponent";
 import BottomSheet from "../components/BottomSheet";
@@ -7,20 +7,8 @@ import StopDetailModal from "../components/tracking/StopDetailModal";
 import { useBusContext } from "../context/BusContext";
 import { API_BASE_URL, WS_BASE_URL } from "../config";
 
-const DUMMY_STOPS = [
-  { stop_id: 1, name: "Ayapakkam Bus Stand", arrival_time: "07:00" },
-  { stop_id: 2, name: "Ambattur OT", arrival_time: "07:09" },
-  { stop_id: 3, name: "Thirumullaivoyal", arrival_time: "07:18" },
-  { stop_id: 4, name: "Avadi Bus Stand" },
-  { stop_id: 5, name: "Paruthipattu" },
-  { stop_id: 6, name: "Sennerkuppam" },
-  { stop_id: 7, name: "Poonamallee Bus Stand" },
-  { stop_id: 8, name: "Kuthambakkam" },
-  { stop_id: 9, name: "RIT Chennai — Main Gate" }
-];
 export default function TrackingPage() {
   const { myBus, setMyBus } = useBusContext();
-  const [selectedStop, setSelectedStop] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [routeData, setRouteData] = useState(null);
   const [availableRoutes, setAvailableRoutes] = useState([]);
@@ -52,12 +40,11 @@ export default function TrackingPage() {
       }
     };
     return () => ws.close();
-  }, [selectedRouteId]);
+  }, [selectedRouteId, setMyBus]);
 
-  function handleStopTap(stop, eta, studentLocation) {
+  function handleStopTap(stop, eta) {
     // Dummy logic for testing modal
     setModalData({ stop, busETA: eta || 12, walkETA: 5 });
-    setSelectedStop(stop);
   }
 
   const stops = routeData ? routeData.stops : [];

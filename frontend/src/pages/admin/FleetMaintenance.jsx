@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  Trophy, AlertTriangle, CheckCircle2, 
-  TrendingUp, Fuel, Timer, Settings2 
+  AlertTriangle, 
+  TrendingUp, Fuel, Settings2 
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config';
 
@@ -35,6 +35,16 @@ export default function FleetMaintenance() {
     if (ratio >= 0.7) return { label: 'C', color: 'text-yellow-500', bg: 'bg-yellow-500/10' };
     return { label: 'D', color: 'text-red-500', bg: 'bg-red-500/10' };
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-8 bg-[var(--bg-primary)] flex items-center justify-center">
+        <div className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest animate-pulse">
+          Loading Fleet Data...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 p-8 overflow-y-auto bg-[var(--bg-primary)]">

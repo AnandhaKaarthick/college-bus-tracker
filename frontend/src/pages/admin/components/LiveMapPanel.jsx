@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, Fragment } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../../../context/ThemeContext';
@@ -64,18 +64,16 @@ export default function LiveMapPanel({ buses, selectedRouteId, onBusClick, route
     <div className="h-full w-full">
       <MapContainer center={[13.0494, 80.0249]} zoom={13} className="h-full w-full" zoomControl={false}>
         <TileLayer
-          attribution='&copy; OpenStreetMap'
-          url={theme === 'dark' 
-            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
         {filteredRoutes.map(route => (
-          <React.Fragment key={route.id}>
+          <Fragment key={route.id}>
             {route.polyline && (
               <Polyline 
                 positions={route.polyline} 
-                color={isActive => route.id === selectedRouteId ? route.color : '#94A3B8'} 
+                color={route.id === selectedRouteId ? route.color : '#94A3B8'} 
                 weight={route.id === selectedRouteId ? 6 : 3}
                 opacity={route.id === selectedRouteId ? 0.8 : 0.3}
               />
@@ -94,7 +92,7 @@ export default function LiveMapPanel({ buses, selectedRouteId, onBusClick, route
                 <Popup><b>{stop.name}</b><br/>{route.name}</Popup>
               </Marker>
             ))}
-          </React.Fragment>
+          </Fragment>
         ))}
 
         {filteredBuses.filter(b => b.lat).map(bus => (

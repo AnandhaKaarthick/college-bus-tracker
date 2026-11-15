@@ -6,13 +6,13 @@ import BottomNavBar from './components/BottomNavBar';
 
 // Old routes
 import DriverApp from './components/DriverApp';
-import AdminDashboard from './components/AdminDashboard';
 import AdminHub from './pages/admin/AdminHub';
 
 // New redesign pages
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import TrackingPage from './pages/TrackingPage';
+import MapPage from './pages/MapPage';
 import SafetyHub from './pages/SafetyHub';
 import ProfilePage from './pages/ProfilePage';
 
@@ -36,7 +36,7 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
 // Layout wrapper to conditionally show BottomNavBar
 function AppLayout() {
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   
   const hideNav = !isAuthenticated || 
                   location.pathname === '/login' || 
@@ -51,6 +51,7 @@ function AppLayout() {
           
           <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['student']}><Dashboard /></ProtectedRoute>} />
           <Route path="/tracking"  element={<ProtectedRoute allowedRoles={['student']}><TrackingPage /></ProtectedRoute>} />
+          <Route path="/map"       element={<ProtectedRoute allowedRoles={['student']}><MapPage /></ProtectedRoute>} />
           <Route path="/safety"    element={<ProtectedRoute allowedRoles={['student']}><SafetyHub /></ProtectedRoute>} />
           <Route path="/profile"   element={<ProtectedRoute allowedRoles={['student']}><ProfilePage /></ProtectedRoute>} />
 

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Shield, MapPin, Navigation, Signal, Radio, 
   MessageSquare, AlertTriangle, Send, Phone, 
-  Info, Zap, ChevronRight, User, Settings
+  Info, Zap, User, Settings
 } from 'lucide-react';
 import { WS_BASE_URL } from '../config';
 
@@ -100,6 +100,12 @@ export default function DriverApp() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="relative z-10 mx-8 mb-4 p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-red-300 text-xs font-semibold">
+          {error}
+        </div>
+      )}
 
       {/* Main Experience Container */}
       <div className="flex-1 relative z-10 overflow-y-auto px-6 pb-32">

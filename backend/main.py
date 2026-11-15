@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, BackgroundTasks
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -163,7 +163,7 @@ async def update_bus_status(bus_id: str, payload: dict, db: Session = Depends(ge
     bus_id_int = int(bus_id)
     bus = db.query(models.Bus).filter(models.Bus.id == bus_id_int).first()
     if not bus:
-        return {"error": "Bus not found"}, 404
+        raise HTTPException(status_code=404, detail="Bus not found")
     
     new_status = payload.get("status")
     if new_status and new_status != bus.status:

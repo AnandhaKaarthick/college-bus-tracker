@@ -1,4 +1,4 @@
-import React from "react";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import MyBusCard from "../components/dashboard/MyBusCard";
 import StatsCard from "../components/dashboard/StatsCard";
@@ -16,6 +16,7 @@ function getGreeting(name, hour) {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { activeBusCount, studentsBoardedCount } = useBusContext();
   const hour = new Date().getHours();
 
@@ -36,7 +37,7 @@ export default function Dashboard() {
         <div className="mb-2">
           <h2 style={{ fontFamily: "var(--font-headline)", fontSize: 24,
                        fontWeight: 700, color: "var(--text-primary)" }}>
-            {getGreeting("Student", hour)}
+            {getGreeting(user?.name || "Student", hour)}
           </h2>
           <p style={{ fontFamily: "var(--font-body)", fontSize: 14,
                       color: "var(--text-muted)", marginTop: "4px" }}>
@@ -100,7 +101,7 @@ export default function Dashboard() {
                 <span className="font-headline font-bold text-xl mb-1">SOS</span>
                 <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Emergency SOS</span>
               </div>
-              <div className="card flex flex-col items-center justify-center p-8 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors text-center border-dashed border-2" onClick={() => window.location.href = '/map'}>
+              <div className="card flex flex-col items-center justify-center p-8 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors text-center border-dashed border-2" onClick={() => navigate('/map')}>
                 <span className="text-2xl mb-2">🗺️</span>
                 <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Full Map</span>
               </div>

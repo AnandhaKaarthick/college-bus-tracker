@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate }     from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   User, Shield, Navigation, 
-  ArrowRight, Lock, Mail, 
-  ChevronRight, CheckCircle2 
+  ArrowRight, Lock, Mail
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 

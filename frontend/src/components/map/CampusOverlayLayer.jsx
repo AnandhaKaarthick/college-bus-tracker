@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMapEvents, useMap } from "react-leaflet";
 import CampusBoundaryPolygon from "./CampusBoundaryPolygon";
 import CampusRoutePolyline   from "./CampusRoutePolyline";
@@ -13,18 +13,19 @@ export default function CampusOverlayLayer({ busLat, busLng, onCampusStopClick }
   const map = useMap();
   const [currentZoom,  setCurrentZoom]  = useState(map.getZoom());
   const { isOnCampus }                  = useCampusMode(busLat, busLng);
-  const [wasOnCampus, setWasOnCampus]   = useState(false);
+  const prevOnCampusRef                 = useRef(false);
 
   useEffect(() => {
-    if (isOnCampus && !wasOnCampus) {
+    const prevOnCampus = prevOnCampusRef.current;
+    if (isOnCampus && !prevOnCampus) {
       // Entered campus
       map.flyTo([13.0130, 80.0038], 17, { duration: 1.8 });
-    } else if (!isOnCampus && wasOnCampus) {
+    } else if (!isOnCampus && prevOnCampus) {
       // Exited campus
       map.flyTo([13.0500, 80.1200], 13, { duration: 1.5 });
     }
-    setWasOnCampus(isOnCampus);
-  }, [isOnCampus, wasOnCampus, map]);
+    prevOnCampusRef.current = isOnCampus;
+  }, [isOnCampus, map]);
 
   // Track zoom level
   useMapEvents({

@@ -1,4 +1,3 @@
-import React from "react";
 import FeatureBadge from "../FeatureBadge";
 import { ChevronRight } from "lucide-react";
 
@@ -30,7 +29,7 @@ function StepperNode({ status }) {
   return <div className="w-3 h-3 rounded-full border-2 border-[var(--border)] bg-[var(--bg-secondary)] z-10"></div>;
 }
 
-export default function StopStepper({ stops, busState, studentLocation, onStopTap }) {
+export default function StopStepper({ stops, studentLocation, onStopTap }) {
   if (!stops || stops.length === 0) return null;
 
   // Mock statuses for visual demonstration since we don't have full backend logic hooked up yet
@@ -51,7 +50,6 @@ export default function StopStepper({ stops, busState, studentLocation, onStopTa
       {stops.map((stop, index) => {
         const status  = getStopStatus(index);
         const eta     = getStopETA(index);
-        const isLast  = index === stops.length - 1;
         const isFirst = index === 0;
 
         return (
@@ -137,8 +135,8 @@ function StopStepperRow({ stop, status, eta, onTap }) {
 
         {/* Right side: badges + chevron */}
         <div className="flex items-center gap-2">
-          {Math.random() > 0.7 && <FeatureBadge type="wifi" />}
-          {Math.random() > 0.8 && <FeatureBadge type="delay" />}
+          {stop?.id % 2 === 0 && <FeatureBadge type="wifi" />}
+          {stop?.id % 3 === 0 && <FeatureBadge type="delay" />}
           {isNext && (
             <span style={{ fontFamily: "var(--font-body)", fontSize: 14,
                            fontWeight: 800, color: "var(--accent-primary)" }}>
