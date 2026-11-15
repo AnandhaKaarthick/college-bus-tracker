@@ -112,7 +112,7 @@ export default function Dashboard() {
       </div>
 
       {/* Floating Action Button (Red Star) */}
-      <button className="fixed bottom-24 right-8 w-14 h-14 rounded-full bg-[var(--accent-primary)] text-white shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform z-50 shadow-[0_4px_20px_rgba(230,57,70,0.4)]">
+      <button className="fixed bottom-20 right-4 sm:bottom-24 sm:right-8 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[var(--accent-primary)] text-white shadow-lg flex items-center justify-center text-xl sm:text-2xl hover:scale-105 transition-transform z-50 shadow-[0_4px_20px_rgba(230,57,70,0.4)]">
         ✽
       </button>
 

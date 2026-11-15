@@ -96,6 +96,7 @@ export default function RouteCreatorStudio() {
   const [existingRoutes, setExistingRoutes] = useState([]);
   const [showManageModal, setShowManageModal] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [mobileTab, setMobileTab] = useState('map'); // 'map' or 'controls'
   
   // Stops & Geometry State
   const [stops, setStops] = useState([]);
@@ -311,55 +312,84 @@ export default function RouteCreatorStudio() {
     <div className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-hidden">
       
       {/* Studio Top Header */}
-      <div className="p-6 px-8 border-b border-[var(--border)] bg-[var(--bg-secondary)] flex justify-between items-center shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-            <Compass size={24} />
+      <div className="p-4 sm:p-6 border-b border-[var(--border)] bg-[var(--bg-secondary)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0">
+            <Compass size={22} />
           </div>
           <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter uppercase">Route Creator Studio</h2>
-              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tighter uppercase">Route Creator Studio</h2>
+              <span className="text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
                 Interactive Road Snapping
               </span>
             </div>
-            <p className="text-xs font-semibold text-[var(--text-muted)]">
+            <p className="text-[11px] sm:text-xs font-semibold text-[var(--text-muted)]">
               Click anywhere on the map to sequence stops and auto-snap highway driving routes.
             </p>
           </div>
         </div>
 
         {/* Action Controls & Presets */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto justify-between md:justify-end">
           <button
             onClick={() => setShowManageModal(true)}
-            className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1.5 mr-2"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1.5"
           >
             <Trash2 size={13} />
-            <span>Manage / Delete ({existingRoutes.length})</span>
+            <span>Manage ({existingRoutes.length})</span>
           </button>
 
-          <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] mr-1 hidden lg:inline">
-            Presets:
-          </span>
-          {PRESETS.map((p, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleLoadPreset(p)}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold border border-[var(--border)] bg-[var(--bg-tertiary)] hover:border-blue-500 text-[var(--text-primary)] transition-all flex items-center gap-1.5"
-            >
-              <Sparkles size={13} className="text-amber-400" />
-              <span>{p.name.split(' ')[0]}</span>
-            </button>
-          ))}
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] mr-1 hidden sm:inline">
+              Presets:
+            </span>
+            {PRESETS.map((p, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleLoadPreset(p)}
+                className="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold border border-[var(--border)] bg-[var(--bg-tertiary)] hover:border-blue-500 text-[var(--text-primary)] transition-all flex items-center gap-1 whitespace-nowrap"
+              >
+                <Sparkles size={12} className="text-amber-400" />
+                <span>{p.name.split(' ')[0]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* MOBILE SEGMENTED VIEW SWITCHER (< lg) */}
+      <div className="lg:hidden flex items-center justify-between p-2.5 px-4 bg-[var(--bg-secondary)] border-b border-[var(--border)] shrink-0 gap-2">
+        <div className="flex bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border)] flex-1">
+          <button
+            onClick={() => setMobileTab('map')}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+              mobileTab === 'map' ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            <Compass size={14} />
+            <span>Map Pinning</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('controls')}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+              mobileTab === 'controls' ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            <Navigation size={14} />
+            <span>Stops & Setup ({stops.length})</span>
+          </button>
         </div>
       </div>
 
       {/* Main Studio Workspace (Split View) */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         
         {/* LEFT COLUMN: Route Config & Stops Sequencer */}
-        <div className="w-full lg:w-[460px] border-r border-[var(--border)] bg-[var(--bg-secondary)] flex flex-col overflow-hidden">
+        <div className={`
+          ${mobileTab === 'controls' ? 'flex flex-col flex-1 w-full h-full' : 'hidden'}
+          lg:flex lg:flex-col lg:w-[460px] border-r border-[var(--border)] bg-[var(--bg-secondary)] overflow-hidden shrink-0
+        `}>
           
           <div className="p-6 border-b border-[var(--border)] space-y-4">
             <div>
@@ -528,22 +558,40 @@ export default function RouteCreatorStudio() {
         </div>
 
         {/* RIGHT COLUMN: Interactive Leaflet Map */}
-        <div className="flex-1 relative overflow-hidden bg-slate-900">
+        <div className={`
+          ${mobileTab === 'map' ? 'flex flex-1 w-full h-full' : 'hidden'}
+          lg:flex lg:flex-1 relative overflow-hidden bg-slate-900 min-h-[400px]
+        `}>
           
           {/* Snapping Overlay Indicator */}
           {isSnapping && (
-            <div className="absolute top-4 right-4 z-[1000] bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white text-xs font-bold flex items-center gap-2 shadow-xl">
+            <div className="absolute top-4 right-4 z-[1000] bg-black/80 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/10 text-white text-[11px] sm:text-xs font-bold flex items-center gap-2 shadow-xl">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
               <span>Tracing Chennai Highways (OSRM)...</span>
             </div>
           )}
 
           {/* Map Helper Prompt */}
-          <div className="absolute top-4 left-4 z-[1000] bg-[var(--bg-secondary)]/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-[var(--border)] shadow-lg max-w-sm pointer-events-none">
-            <div className="text-[10px] font-black uppercase text-blue-500 tracking-wider mb-0.5">Map Action</div>
-            <div className="text-xs font-bold text-[var(--text-primary)]">
-              {stops.length === 0 ? "Click to place the Starting Stop" : `Click to place Stop #${stops.length + 1}`}
+          <div className="absolute top-4 left-4 z-[1000] bg-[var(--bg-secondary)]/90 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-[var(--border)] shadow-lg max-w-[240px] sm:max-w-sm pointer-events-none">
+            <div className="text-[9px] sm:text-[10px] font-black uppercase text-blue-500 tracking-wider mb-0.5">Map Action</div>
+            <div className="text-[11px] sm:text-xs font-bold text-[var(--text-primary)]">
+              {stops.length === 0 ? "Click to place Start Stop" : `Click to place Stop #${stops.length + 1}`}
             </div>
+          </div>
+
+          {/* Mobile Bottom Quick Bar (< lg) */}
+          <div className="lg:hidden absolute bottom-4 inset-x-4 z-[1000] bg-[var(--bg-secondary)]/95 backdrop-blur-md p-3 px-4 rounded-2xl border border-[var(--border)] shadow-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold min-w-0">
+              <span className="text-[var(--text-primary)] whitespace-nowrap">📍 {stops.length} Stops</span>
+              <span className="text-blue-500 whitespace-nowrap">• {distanceKm} KM</span>
+              <span className="text-green-500 whitespace-nowrap">• ~{durationMin}m</span>
+            </div>
+            <button
+              onClick={() => setMobileTab('controls')}
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:bg-blue-500 shrink-0"
+            >
+              Review / Save →
+            </button>
           </div>
 
           <MapContainer
@@ -600,10 +648,10 @@ export default function RouteCreatorStudio() {
       {/* MANAGE / DELETE EXISTING ROUTES MODAL */}
       {showManageModal && (
         <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[var(--bg-secondary)] rounded-[40px] border border-[var(--border)] p-8 max-w-xl w-full shadow-2xl space-y-6">
+          <div className="bg-[var(--bg-secondary)] rounded-3xl sm:rounded-[40px] border border-[var(--border)] p-5 sm:p-8 max-w-xl w-full shadow-2xl space-y-4 sm:space-y-6 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
               <div>
-                <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Active Transit Routes</h3>
+                <h3 className="text-lg sm:text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Active Transit Routes</h3>
                 <p className="text-xs font-semibold text-[var(--text-muted)]">Manage or delete existing routes across the network</p>
               </div>
               <button 

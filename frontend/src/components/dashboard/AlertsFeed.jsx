@@ -102,13 +102,13 @@ export default function AlertsFeed({ onAlertCountChange }) {
       
       <div className="flex flex-col">
         {alerts.map((alert, idx) => (
-          <div key={alert.id} className={`px-5 py-4 flex gap-3 ${idx !== alerts.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
+          <div key={alert.id} className={`px-4 sm:px-5 py-3.5 sm:py-4 flex gap-3 min-w-0 ${idx !== alerts.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
             <span className={`pill pill-${alert.pillType} self-start shrink-0 text-sm py-1`}>
               {alert.icon}
             </span>
-            <div className="flex-1">
-              <h4 className="font-body text-sm font-semibold text-[var(--text-primary)]">{alert.title}</h4>
-              <p className="font-body text-xs text-[var(--text-muted)] mt-1">{alert.desc}</p>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-body text-sm font-semibold text-[var(--text-primary)] break-words">{alert.title}</h4>
+              <p className="font-body text-xs text-[var(--text-muted)] mt-1 break-words">{alert.desc}</p>
             </div>
           </div>
         ))}

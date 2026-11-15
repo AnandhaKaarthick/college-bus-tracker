@@ -132,40 +132,40 @@ export default function ProfilePage() {
 
   return (
     <div className="flex-1 bg-[var(--bg-primary)] overflow-y-auto">
-      <div className="max-w-6xl mx-auto p-8 space-y-8">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase mb-2">My Profile</h1>
-          <p className="text-sm font-medium text-[var(--text-muted)]">Manage your personal transit verified account & boarding status.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase mb-1 sm:mb-2">My Profile</h1>
+          <p className="text-xs sm:text-sm font-medium text-[var(--text-muted)]">Manage your personal transit verified account & boarding status.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Left Column: Personal & Notifications */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6 sm:space-y-8">
             
             {/* User Info Card */}
-            <div className="bg-[var(--bg-secondary)] p-10 rounded-[50px] border border-[var(--border)] shadow-sm">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 bg-blue-600 rounded-[28px] flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-blue-600/20">
+            <div className="bg-[var(--bg-secondary)] p-5 sm:p-8 md:p-10 rounded-3xl sm:rounded-[50px] border border-[var(--border)] shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+                <div className="flex items-center gap-4 sm:gap-6">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 bg-blue-600 rounded-2xl sm:rounded-[28px] flex items-center justify-center text-white text-lg sm:text-2xl font-black shadow-xl shadow-blue-600/20 shrink-0">
                     {user?.name ? user.name.slice(0, 2).toUpperCase() : 'ST'}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">{user?.name || "Student User"}</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tight">{user?.name || "Student User"}</h2>
                     <p className="text-blue-600 font-bold text-xs uppercase tracking-wider">{user?.role || "Student"} • RIT Chennai</p>
                   </div>
                 </div>
 
                 <button 
                   onClick={logout}
-                  className="px-5 py-2.5 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+                  className="self-start sm:self-auto px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
                 >
                   <LogOut size={16} />
                   <span>Log Out</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <InfoField icon={Mail} label="Email Address" value={user?.email || "user@rit.ac.in"} />
                 <InfoField icon={Phone} label="Phone Number" value={user?.phone || "+91 98765 43210"} />
                 <InfoField icon={Hash} label="Roll / Identifier" value={user?.identifier || "21CS001"} />
@@ -176,18 +176,18 @@ export default function ProfilePage() {
             </div>
 
             {/* Attendance Marking Card */}
-            <div className="bg-blue-600 p-10 rounded-[50px] border border-blue-500 shadow-xl shadow-blue-600/20 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+            <div className="bg-blue-600 p-5 sm:p-8 md:p-10 rounded-3xl sm:rounded-[50px] border border-blue-500 shadow-xl shadow-blue-600/20 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform hidden sm:block">
                 <Sparkles size={120} className="text-white" />
               </div>
               
               <div className="relative z-10">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white">
-                      <User size={20} />
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white shrink-0">
+                      <User size={18} />
                     </div>
-                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Bus Attendance</h3>
+                    <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight">Bus Attendance</h3>
                   </div>
 
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
@@ -197,7 +197,7 @@ export default function ProfilePage() {
                   </span>
                 </div>
 
-                <p className="text-blue-100 text-sm font-medium mb-8 max-w-md leading-relaxed">
+                <p className="text-blue-100 text-xs sm:text-sm font-medium mb-6 sm:mb-8 max-w-md leading-relaxed">
                   Help us track real-time occupancy! Mark your attendance when boarding or deboarding {busName}.
                 </p>
 
@@ -208,11 +208,11 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <button 
                     onClick={handleCheckIn}
                     disabled={isCheckedIn || loadingAttendance}
-                    className={`flex-1 py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-lg ${
+                    className={`flex-1 py-3.5 sm:py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-lg ${
                       isCheckedIn 
                         ? 'bg-white/40 text-blue-900 opacity-60 cursor-not-allowed' 
                         : 'bg-white text-blue-600 hover:bg-blue-50 active:scale-95'
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                   <button 
                     onClick={handleCheckOut}
                     disabled={!isCheckedIn || loadingAttendance}
-                    className={`flex-1 py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 border border-white/20 ${
+                    className={`flex-1 py-3.5 sm:py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 border border-white/20 ${
                       !isCheckedIn 
                         ? 'bg-blue-500/20 text-white/50 opacity-50 cursor-not-allowed' 
                         : 'bg-blue-500/40 text-white hover:bg-blue-500/60 active:scale-95'
@@ -234,19 +234,19 @@ export default function ProfilePage() {
                   </button>
                 </div>
                 
-                <div className="mt-8 flex items-center gap-4">
-                  <div className="flex -space-x-2">
+                <div className="mt-6 sm:mt-8 flex items-center gap-4">
+                  <div className="flex -space-x-2 shrink-0">
                     {[1, 2, 3].map(i => (
-                      <div key={i} className="w-8 h-8 rounded-full border-2 border-blue-600 bg-blue-300 flex items-center justify-center text-[10px] font-black text-blue-900">
+                      <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-blue-600 bg-blue-300 flex items-center justify-center text-[10px] font-black text-blue-900">
                         👤
                       </div>
                     ))}
                   </div>
                   <div>
-                    <span className="text-sm font-black text-white uppercase tracking-wider block">
+                    <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider block">
                       {passengerCount} Students Currently On Board
                     </span>
-                    <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-blue-200 uppercase tracking-widest">
                       Occupancy Status: {occupancy.toUpperCase()}
                     </span>
                   </div>
@@ -255,7 +255,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Notification Preferences */}
-            <div className="bg-[var(--bg-secondary)] p-10 rounded-[50px] border border-[var(--border)] shadow-sm">
+            <div className="bg-[var(--bg-secondary)] p-5 sm:p-8 md:p-10 rounded-3xl sm:rounded-[50px] border border-[var(--border)] shadow-sm">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                   <Bell className="text-[var(--text-primary)]" size={24} />
@@ -293,7 +293,7 @@ export default function ProfilePage() {
             {/* Save Button */}
             <button 
               onClick={handleSavePreferences}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-[30px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98]"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 sm:py-5 rounded-2xl sm:rounded-[30px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98]"
             >
               <Save size={20} />
               Save Preferences
@@ -301,9 +301,9 @@ export default function ProfilePage() {
           </div>
 
           {/* Right Column: Sidebar */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Saved Routes */}
-            <div className="bg-[var(--bg-secondary)] p-8 rounded-[40px] border border-[var(--border)] shadow-sm">
+            <div className="bg-[var(--bg-secondary)] p-5 sm:p-8 rounded-3xl sm:rounded-[40px] border border-[var(--border)] shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <Heart className="text-red-500" size={20} />
                 <h3 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-widest">Saved Routes</h3>
@@ -320,7 +320,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Emergency Settings */}
-            <div className="bg-red-50 dark:bg-red-950/20 p-8 rounded-[40px] border border-red-100 dark:border-red-900/30 shadow-sm">
+            <div className="bg-red-50 dark:bg-red-950/20 p-5 sm:p-8 rounded-3xl sm:rounded-[40px] border border-red-100 dark:border-red-900/30 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="text-red-600" size={20} />
                 <h3 className="text-sm font-black text-red-600 uppercase tracking-widest">Emergency Settings</h3>
@@ -344,13 +344,13 @@ export default function ProfilePage() {
 
 function InfoField({ icon: Icon, label, value }) {
   return (
-    <div className="bg-[var(--bg-tertiary)] p-6 rounded-[28px] flex items-center gap-4 border border-[var(--border)]/50">
-      <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-[var(--text-muted)] shadow-sm">
+    <div className="bg-[var(--bg-tertiary)] p-4 sm:p-6 rounded-2xl sm:rounded-[28px] flex items-center gap-4 border border-[var(--border)]/50">
+      <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-[var(--text-muted)] shadow-sm shrink-0">
         <Icon size={18} />
       </div>
-      <div>
-        <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{label}</div>
-        <div className="text-sm font-black text-[var(--text-primary)]">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest truncate">{label}</div>
+        <div className="text-sm font-black text-[var(--text-primary)] truncate">{value}</div>
       </div>
     </div>
   );

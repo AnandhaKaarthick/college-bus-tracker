@@ -69,15 +69,15 @@ export default function CommunicationHub() {
     <div className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-hidden">
       
       {/* Tab Header */}
-      <div className="p-8 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg-secondary)]">
+      <div className="p-4 sm:p-6 md:p-8 border-b border-[var(--border)] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[var(--bg-secondary)] shrink-0">
         <div>
-          <h2 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase mb-2">Comm Hub</h2>
-          <div className="flex gap-4">
+          <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase mb-2">Comm Hub</h2>
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-1 max-w-[calc(100vw-32px)]">
             {['announcements', 'dispatch', 'emergency'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-[10px] font-black uppercase tracking-widest pb-2 border-b-2 transition-all ${
+                className={`text-[10px] font-black uppercase tracking-widest pb-1.5 border-b-2 whitespace-nowrap transition-all ${
                   activeTab === tab ? 'border-[var(--accent-primary)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                 }`}
               >
@@ -88,13 +88,13 @@ export default function CommunicationHub() {
         </div>
         <button 
           onClick={triggerTestSOS}
-          className="px-6 py-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10"
+          className="self-end sm:self-auto px-5 py-2.5 sm:px-6 sm:py-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10 shrink-0"
         >
           Simulate SOS
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
         {activeTab === 'announcements' && <AnnouncementPanel />}
         {activeTab === 'dispatch' && <DriverDispatchPanel />}
         {activeTab === 'emergency' && <EmergencyLogsPanel />}
@@ -172,10 +172,10 @@ function AnnouncementPanel() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div className="space-y-6">
-        <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Post Broadcast</h3>
-        <form onSubmit={handlePublish} className="bg-[var(--bg-secondary)] p-8 rounded-[40px] border border-[var(--border)] shadow-xl space-y-6">
+    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+      <div className="space-y-4 sm:space-y-6">
+        <h3 className="text-lg sm:text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Post Broadcast</h3>
+        <form onSubmit={handlePublish} className="bg-[var(--bg-secondary)] p-5 sm:p-8 rounded-3xl sm:rounded-[40px] border border-[var(--border)] shadow-xl space-y-4 sm:space-y-6">
           {successMsg && (
             <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-2xl text-green-500 text-xs font-bold flex items-center gap-2">
               <Check size={16} />
@@ -188,7 +188,7 @@ function AnnouncementPanel() {
             <input 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-2xl p-4 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] transition-all"
+              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-2xl p-3.5 sm:p-4 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] transition-all"
               placeholder="e.g. Schedule Change, Rain Alert"
               required
             />
@@ -199,7 +199,7 @@ function AnnouncementPanel() {
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-2xl p-4 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] transition-all resize-none"
+              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-2xl p-3.5 sm:p-4 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] transition-all resize-none"
               placeholder="Provide details for the students..."
               required
             />
@@ -242,7 +242,7 @@ function AnnouncementPanel() {
           <button 
             type="submit"
             disabled={isPublishing}
-            className="w-full py-5 bg-[var(--accent-primary)] text-white font-black rounded-3xl flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+            className="w-full py-4 sm:py-5 bg-[var(--accent-primary)] text-white font-black rounded-2xl sm:rounded-3xl flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 text-xs sm:text-sm tracking-wider"
           >
             <Send size={18} />
             {isPublishing ? 'PUBLISHING...' : 'PUBLISH BROADCAST'}
@@ -250,16 +250,16 @@ function AnnouncementPanel() {
         </form>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Recent Activity</h3>
-        <div className="space-y-4">
+      <div className="space-y-4 sm:space-y-6">
+        <h3 className="text-lg sm:text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Recent Activity</h3>
+        <div className="space-y-3 sm:space-y-4">
           {recentAnnouncements.length === 0 ? (
             <div className="p-8 text-center bg-[var(--bg-tertiary)] rounded-3xl border border-[var(--border)] text-sm text-[var(--text-muted)] font-medium">
               No recent announcements.
             </div>
           ) : (
             recentAnnouncements.map((item) => (
-              <div key={item.id} className="bg-[var(--bg-tertiary)] p-6 rounded-3xl border border-[var(--border)] flex gap-4">
+              <div key={item.id} className="bg-[var(--bg-tertiary)] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-[var(--border)] flex gap-3 sm:gap-4">
                 <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 shrink-0">
                   <Bell size={20} />
                 </div>
@@ -339,23 +339,25 @@ function DriverDispatchPanel() {
   const selectedDriver = drivers.find(d => d.id === selectedDriverId) || drivers[0];
 
   return (
-    <div className="h-[600px] bg-[var(--bg-secondary)] rounded-[40px] border border-[var(--border)] shadow-xl overflow-hidden flex">
+    <div className="h-[620px] md:h-[600px] bg-[var(--bg-secondary)] rounded-3xl md:rounded-[40px] border border-[var(--border)] shadow-xl overflow-hidden flex flex-col md:flex-row">
       {/* Driver List */}
-      <div className="w-64 border-r border-[var(--border)] flex flex-col bg-[var(--bg-tertiary)]/50">
-        <div className="p-6 border-b border-[var(--border)]">
+      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[var(--border)] flex flex-col bg-[var(--bg-tertiary)]/50 shrink-0">
+        <div className="p-3 sm:p-6 border-b border-[var(--border)]">
           <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Online Fleet Captains</div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto p-2 md:p-0 gap-2 md:gap-0">
           {drivers.map(driver => (
             <button 
               key={driver.id} 
               onClick={() => setSelectedDriverId(driver.id)}
-              className={`w-full p-4 flex items-center gap-3 hover:bg-[var(--bg-tertiary)] transition-all ${
-                selectedDriverId === driver.id ? 'bg-[var(--bg-tertiary)] border-r-4 border-[var(--accent-primary)]' : ''
+              className={`shrink-0 p-3 sm:p-4 rounded-xl md:rounded-none flex items-center gap-3 hover:bg-[var(--bg-tertiary)] transition-all ${
+                selectedDriverId === driver.id 
+                  ? 'bg-[var(--bg-tertiary)] md:border-r-4 border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary)]/30 md:ring-0' 
+                  : ''
               }`}
             >
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-[var(--accent-primary)]">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-[var(--accent-primary)]">
                   <Navigation size={18} />
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--bg-secondary)]" />
@@ -370,16 +372,18 @@ function DriverDispatchPanel() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <h4 className="font-black text-sm uppercase tracking-tight">{selectedDriver.busName} Dispatch Thread ({selectedDriver.name})</h4>
-            <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-[8px] font-black uppercase">Active</span>
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="p-4 sm:p-6 border-b border-[var(--border)] flex justify-between items-center gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <h4 className="font-black text-xs sm:text-sm uppercase tracking-tight truncate">
+              {selectedDriver.busName} ({selectedDriver.name})
+            </h4>
+            <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-[8px] font-black uppercase shrink-0">Active</span>
           </div>
-          <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"><AlertCircle size={18}/></button>
+          <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] shrink-0"><AlertCircle size={18}/></button>
         </div>
 
-        <div className="flex-1 p-6 space-y-4 overflow-y-auto bg-[var(--bg-tertiary)]/10">
+        <div className="flex-1 p-4 sm:p-6 space-y-4 overflow-y-auto bg-[var(--bg-tertiary)]/10">
           {messages.length === 0 ? (
             <div className="text-center text-xs text-[var(--text-muted)] pt-8 font-medium">
               No messages in this dispatch thread yet. Send an instruction below.
@@ -389,12 +393,12 @@ function DriverDispatchPanel() {
               const isAdmin = m.sender === 'admin';
               return (
                 <div key={m.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] p-4 rounded-3xl ${
+                  <div className={`max-w-[85%] sm:max-w-[80%] p-3.5 sm:p-4 rounded-3xl ${
                     isAdmin 
                       ? 'bg-[var(--accent-primary)] text-white rounded-tr-none shadow-lg shadow-blue-500/20' 
                       : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] rounded-tl-none border border-[var(--border)] shadow-sm'
                   }`}>
-                    <p className="text-sm font-bold">{m.text}</p>
+                    <p className="text-xs sm:text-sm font-bold">{m.text}</p>
                     <div className={`text-[8px] font-black uppercase mt-2 ${isAdmin ? 'text-white/70 text-right' : 'text-[var(--text-muted)]'}`}>
                       {isAdmin ? 'You (Admin)' : selectedDriver.name} • {m.sent_at}
                     </div>
@@ -405,7 +409,7 @@ function DriverDispatchPanel() {
           )}
         </div>
 
-        <form onSubmit={handleSendMessage} className="p-6 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+        <form onSubmit={handleSendMessage} className="p-3 sm:p-6 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
           <div className="flex gap-4">
             <input 
               value={inputMsg}
@@ -455,59 +459,61 @@ function EmergencyLogsPanel() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">SOS History & Live Panic Logs</h3>
-      <div className="bg-[var(--bg-secondary)] rounded-[40px] border border-[var(--border)] overflow-hidden shadow-xl">
-        <table className="w-full text-left">
-          <thead className="bg-[var(--bg-tertiary)]">
-            <tr className="border-b border-[var(--border)]">
-              <th className="px-8 py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Unit</th>
-              <th className="px-8 py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Event</th>
-              <th className="px-8 py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Time</th>
-              <th className="px-8 py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Status / Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border)]">
-            {loading ? (
-              <tr>
-                <td colSpan="4" className="px-8 py-6 text-center text-xs text-[var(--text-muted)]">Loading emergency logs...</td>
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+      <h3 className="text-lg sm:text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">SOS History & Live Panic Logs</h3>
+      <div className="bg-[var(--bg-secondary)] rounded-3xl sm:rounded-[40px] border border-[var(--border)] overflow-hidden shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[500px]">
+            <thead className="bg-[var(--bg-tertiary)]">
+              <tr className="border-b border-[var(--border)]">
+                <th className="px-4 sm:px-8 py-3.5 sm:py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Unit</th>
+                <th className="px-4 sm:px-8 py-3.5 sm:py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Event</th>
+                <th className="px-4 sm:px-8 py-3.5 sm:py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Time</th>
+                <th className="px-4 sm:px-8 py-3.5 sm:py-4 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Status / Action</th>
               </tr>
-            ) : alerts.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="px-8 py-6 text-center text-xs text-[var(--text-muted)]">No emergency records logged.</td>
-              </tr>
-            ) : (
-              alerts.map(a => (
-                <tr key={a.id}>
-                  <td className="px-8 py-6 font-black text-xs text-[var(--text-primary)]">{a.unit}</td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-2">
-                      <ShieldAlert size={14} className="text-red-500" />
-                      <span className="text-xs font-bold text-red-500 uppercase">{a.event}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 text-xs text-[var(--text-muted)]">{a.time}</td>
-                  <td className="px-8 py-6">
-                    {a.status === 'resolved' ? (
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full">
-                        <CheckCircle2 size={12} />
-                        <span className="text-[10px] font-black uppercase">Resolved</span>
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={() => handleResolve(a.id)}
-                        className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-full transition-colors text-[10px] font-black uppercase"
-                      >
-                        <ShieldAlert size={12} />
-                        Mark Resolved
-                      </button>
-                    )}
-                  </td>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="px-4 sm:px-8 py-6 text-center text-xs text-[var(--text-muted)]">Loading emergency logs...</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : alerts.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="px-4 sm:px-8 py-6 text-center text-xs text-[var(--text-muted)]">No emergency records logged.</td>
+                </tr>
+              ) : (
+                alerts.map(a => (
+                  <tr key={a.id}>
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 font-black text-xs text-[var(--text-primary)]">{a.unit}</td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-6">
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert size={14} className="text-red-500 shrink-0" />
+                        <span className="text-xs font-bold text-red-500 uppercase">{a.event}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 text-xs text-[var(--text-muted)]">{a.time}</td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-6">
+                      {a.status === 'resolved' ? (
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full">
+                          <CheckCircle2 size={12} />
+                          <span className="text-[10px] font-black uppercase">Resolved</span>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => handleResolve(a.id)}
+                          className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-full transition-colors text-[10px] font-black uppercase"
+                        >
+                          <ShieldAlert size={12} />
+                          Mark Resolved
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

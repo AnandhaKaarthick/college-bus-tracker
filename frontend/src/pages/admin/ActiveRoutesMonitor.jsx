@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Map, List, Compass } from 'lucide-react';
 import RouteGrid from './components/RouteGrid';
 import LiveMapPanel from './components/LiveMapPanel';
 import BusTelemetryModal from './components/BusTelemetryModal';
@@ -15,6 +15,7 @@ export default function ActiveRoutesMonitor() {
   const [isLoading, setIsLoading] = useState(true);
   const [routeToDelete, setRouteToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [mobileTab, setMobileTab] = useState('map'); // 'map' or 'routes'
 
   const fetchRoutes = async () => {
     try {
@@ -77,43 +78,91 @@ export default function ActiveRoutesMonitor() {
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[var(--bg-primary)]">
-      {/* Sidebar: Route List */}
-      <div className="w-80 border-r border-[var(--border)] bg-[var(--bg-secondary)] flex flex-col shrink-0">
-        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-black tracking-tight text-[var(--text-primary)] uppercase">Active Routes</h2>
-            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Select to filter map</p>
-          </div>
-          <button 
-            onClick={() => navigate('/admin/routes')}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-md transition-all flex items-center gap-1.5 text-xs font-black uppercase tracking-wider"
-            title="Create New Route in Studio"
+    <div className="flex flex-col h-full w-full overflow-hidden bg-[var(--bg-primary)]">
+      
+      {/* MOBILE SEGMENTED VIEW SWITCHER (< lg) */}
+      <div className="lg:hidden flex items-center justify-between p-3 px-4 bg-[var(--bg-secondary)] border-b border-[var(--border)] shrink-0 gap-2">
+        <div className="flex bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border)] flex-1 max-w-xs">
+          <button
+            onClick={() => setMobileTab('map')}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+              mobileTab === 'map' ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-muted)]'
+            }`}
           >
-            <Plus size={15} />
-            <span>New</span>
+            <Map size={14} />
+            <span>Map</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('routes')}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+              mobileTab === 'routes' ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            <List size={14} />
+            <span>Routes ({routes.length})</span>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          <RouteGrid 
-            routes={routes} 
-            selectedRouteId={selectedRouteId} 
-            onRouteSelect={setSelectedRouteId} 
-            onDeleteRoute={(route) => setRouteToDelete(route)}
-            buses={Object.values(buses)}
-            isLoading={isLoading}
-          />
-        </div>
+
+        <button 
+          onClick={() => navigate('/admin/routes')}
+          className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-md transition-all flex items-center gap-1 text-xs font-black uppercase tracking-wider shrink-0"
+        >
+          <Plus size={14} />
+          <span>New Route</span>
+        </button>
       </div>
 
-      {/* Main Panel: Map */}
-      <div className="flex-1 relative">
-        <LiveMapPanel 
-          buses={Object.values(buses)} 
-          selectedRouteId={selectedRouteId} 
-          routes={routes}
-          onBusSelect={setSelectedBusId}
-        />
+      {/* WORKSPACE AREA */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        
+        {/* Sidebar: Route List */}
+        <div className={`
+          ${mobileTab === 'routes' ? 'flex flex-col flex-1 w-full' : 'hidden'} 
+          lg:flex lg:flex-col lg:w-80 border-r border-[var(--border)] bg-[var(--bg-secondary)] shrink-0 overflow-hidden
+        `}>
+          <div className="hidden lg:flex p-6 border-b border-[var(--border)] justify-between items-center">
+            <div>
+              <h2 className="text-lg font-black tracking-tight text-[var(--text-primary)] uppercase">Active Routes</h2>
+              <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Select to filter map</p>
+            </div>
+            <button 
+              onClick={() => navigate('/admin/routes')}
+              className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-md transition-all flex items-center gap-1.5 text-xs font-black uppercase tracking-wider"
+              title="Create New Route in Studio"
+            >
+              <Plus size={15} />
+              <span>New</span>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <RouteGrid 
+              routes={routes} 
+              selectedRouteId={selectedRouteId} 
+              onRouteSelect={(id) => {
+                setSelectedRouteId(id);
+                // On mobile, auto-switch to map view when a route is picked!
+                setMobileTab('map');
+              }} 
+              onDeleteRoute={(route) => setRouteToDelete(route)}
+              buses={Object.values(buses)}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
+
+        {/* Main Panel: Map */}
+        <div className={`
+          ${mobileTab === 'map' ? 'flex-1 relative block h-full' : 'hidden'} 
+          lg:flex-1 lg:relative lg:block
+        `}>
+          <LiveMapPanel 
+            buses={Object.values(buses)} 
+            selectedRouteId={selectedRouteId} 
+            routes={routes}
+            onBusSelect={setSelectedBusId}
+          />
+        </div>
+
       </div>
 
       {/* Telemetry Modal */}
