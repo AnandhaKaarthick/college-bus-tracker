@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -50,10 +50,32 @@ const stopIcon = (status = 'upcoming', theme = 'light') => {
 };
 
 // --- SUB-COMPONENTS ---
-function MapFixes({ bounds }) {
+function MapViewController({ selectedRoute }) {
   const map = useMap();
-  useEffect(() => { setTimeout(() => { map.invalidateSize(); }, 100); }, [map]);
-  useEffect(() => { if (bounds) map.fitBounds(bounds, { padding: [100, 100] }); }, [bounds, map]);
+  const lastFittedRouteIdRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [map]);
+
+  // Fit bounds ONCE when a new route is selected, avoiding repeated auto-zooming on live GPS ticks
+  useEffect(() => {
+    if (!selectedRoute) return;
+    if (lastFittedRouteIdRef.current === selectedRoute.id) return;
+    lastFittedRouteIdRef.current = selectedRoute.id;
+
+    if (selectedRoute.polyline && selectedRoute.polyline.length > 0) {
+      const bounds = L.latLngBounds(selectedRoute.polyline);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    } else if (selectedRoute.stops && selectedRoute.stops.length > 0) {
+      const bounds = L.latLngBounds(selectedRoute.stops.map(s => [s.lat, s.lng]));
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    }
+  }, [selectedRoute, map]);
+
   return null;
 }
 
@@ -67,6 +89,10 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
   const [modalData, setModalData] = useState(null);
   
   const collegePosition = [13.0494, 80.0249];
+
+  useEffect(() => {
+    if (initialRouteId) setSelectedRouteId(initialRouteId);
+  }, [initialRouteId]);
 
   useEffect(() => {
     const init = async () => {
@@ -178,11 +204,7 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
             <Popup><b>{b.name}</b></Popup>
           </Marker>
         ))}
-        {activeBus && nextStop && <MapFixes bounds={L.latLngBounds([[activeBus.lat, activeBus.lng], [nextStop.lat, nextStop.lng]])} />}
-        {!activeBus && selectedRoute && selectedRoute.polyline && selectedRoute.polyline.length > 0 && (
-          <MapFixes bounds={L.latLngBounds(selectedRoute.polyline)} />
-        )}
-        {!activeBus && !selectedRoute && <MapFixes />}
+        <MapViewController selectedRoute={selectedRoute} />
       </MapContainer>
     </>
   );
