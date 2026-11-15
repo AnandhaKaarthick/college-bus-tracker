@@ -68,6 +68,7 @@ export default function StopStepper({ stops, studentLocation, onStopTap }) {
 
             <StopStepperRow
               stop={stop}
+              index={index}
               status={status}
               eta={eta}
               onTap={
@@ -83,7 +84,7 @@ export default function StopStepper({ stops, studentLocation, onStopTap }) {
   );
 }
 
-function StopStepperRow({ stop, status, eta, onTap }) {
+function StopStepperRow({ stop, index = 0, status, eta, onTap }) {
   const isPassed  = status === "passed";
   const isNext    = status === "next";
   const isTappable = !!onTap;

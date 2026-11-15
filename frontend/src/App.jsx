@@ -3,6 +3,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { BusProvider } from './context/BusContext';
 import BottomNavBar from './components/BottomNavBar';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Old routes
 import DriverApp from './components/DriverApp';
@@ -69,15 +70,17 @@ function AppLayout() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BusProvider>
-          <Router>
-            <AppLayout />
-          </Router>
-        </BusProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <BusProvider>
+            <Router>
+              <AppLayout />
+            </Router>
+          </BusProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
