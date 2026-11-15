@@ -6,6 +6,7 @@ import { Search, Menu, Phone, Navigation, AlertTriangle, Users, ChevronRight, X,
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggleButton from './ThemeToggleButton';
 import { API_BASE_URL, WS_BASE_URL } from '../config';
+import routesGeometry from '../data/routesGeometry.json';
 
 // --- LEAFLET ASSET FIX ---
 delete L.Icon.Default.prototype._getIconUrl;
@@ -50,7 +51,7 @@ const stopIcon = (status = 'upcoming', theme = 'light') => {
 };
 
 // --- SUB-COMPONENTS ---
-function MapViewController({ selectedRoute }) {
+function MapViewController({ selectedRoute, routePolyline }) {
   const map = useMap();
   const lastFittedRouteIdRef = useRef(null);
 
@@ -67,14 +68,15 @@ function MapViewController({ selectedRoute }) {
     if (lastFittedRouteIdRef.current === selectedRoute.id) return;
     lastFittedRouteIdRef.current = selectedRoute.id;
 
-    if (selectedRoute.polyline && selectedRoute.polyline.length > 0) {
-      const bounds = L.latLngBounds(selectedRoute.polyline);
+    const poly = (routePolyline && routePolyline.length > 0) ? routePolyline : selectedRoute.polyline;
+    if (poly && poly.length > 0) {
+      const bounds = L.latLngBounds(poly);
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     } else if (selectedRoute.stops && selectedRoute.stops.length > 0) {
       const bounds = L.latLngBounds(selectedRoute.stops.map(s => [s.lat, s.lng]));
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }
-  }, [selectedRoute, map]);
+  }, [selectedRoute, routePolyline, map]);
 
   return null;
 }
@@ -126,6 +128,15 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
     console.log("Map Debug: Selected Route", { id: selectedRouteId, found: !!found });
     return found;
   }, [routes, selectedRouteId]);
+
+  // Ensure high-precision road-snapped polyline (prevents straight lines across lakes/buildings)
+  const routePolyline = useMemo(() => {
+    if (selectedRoute?.polyline && selectedRoute.polyline.length > 15) {
+      return selectedRoute.polyline;
+    }
+    const fallback = routesGeometry[String(selectedRouteId)] || routesGeometry["1"];
+    return fallback || (selectedRoute?.polyline || []);
+  }, [selectedRoute, selectedRouteId]);
   
   const activeBus = useMemo(() => Object.values(buses).find(b => String(b.route_id) === String(selectedRouteId)), [buses, selectedRouteId]);
   
@@ -191,8 +202,8 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
     <>
       <MapContainer center={collegePosition} zoom={13} className="h-full w-full" zoomControl={false}>
         <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {selectedRoute && selectedRoute.polyline && (
-          <Polyline positions={selectedRoute.polyline} color={theme === 'dark' ? '#60A5FA' : '#2563EB'} weight={6} opacity={0.6} />
+        {routePolyline && routePolyline.length > 0 && (
+          <Polyline positions={routePolyline} color={theme === 'dark' ? '#60A5FA' : '#2563EB'} weight={6} opacity={0.6} />
         )}
         {stopsWithStatus.map((s, idx) => (
           <Marker key={s.stop_id || idx} position={[s.lat, s.lng]} icon={stopIcon(s.status, theme)}>
@@ -204,7 +215,7 @@ export default function MapComponent({ hideUI = false, initialRouteId = null }) 
             <Popup><b>{b.name}</b></Popup>
           </Marker>
         ))}
-        <MapViewController selectedRoute={selectedRoute} />
+        <MapViewController selectedRoute={selectedRoute} routePolyline={routePolyline} />
       </MapContainer>
     </>
   );

@@ -57,22 +57,36 @@ def reset_and_sync():
             db.add(stop)
             stops_data.append(stop)
         
-        # 3. Fetch Real Road Geometry (OSRM)
+        # 3. Fetch Real Road Geometry
         print("Fetching road geometry...")
-        coords_str = ";".join([f"{s.lng},{s.lat}" for s in stops_data])
-        url = f"http://router.project-osrm.org/route/v1/driving/{coords_str}?overview=full&geometries=geojson"
-        
-        try:
-            r = httpx.get(url, timeout=15)
-            if r.status_code == 200:
-                geometry = r.json()['routes'][0]['geometry']['coordinates']
-                polyline = [[c[1], c[0]] for c in geometry]
-                route.polyline_json = json.dumps(polyline)
-                print(f"Success! {len(polyline)} points.")
-            else:
+        import os
+        local_geom_path = 'routes_geometry.json' if os.path.exists('routes_geometry.json') else 'backend/routes_geometry.json'
+        cached_poly = None
+        if os.path.exists(local_geom_path):
+            try:
+                with open(local_geom_path, 'r', encoding='utf-8') as f:
+                    cached = json.load(f)
+                    cached_poly = cached.get(str(idx))
+            except:
+                pass
+
+        if cached_poly:
+            route.polyline_json = json.dumps(cached_poly)
+            print(f"Loaded {len(cached_poly)} road points from local cache.")
+        else:
+            coords_str = ";".join([f"{s.lng},{s.lat}" for s in stops_data])
+            url = f"http://router.project-osrm.org/route/v1/driving/{coords_str}?overview=full&geometries=geojson"
+            try:
+                r = httpx.get(url, timeout=15)
+                if r.status_code == 200:
+                    geometry = r.json()['routes'][0]['geometry']['coordinates']
+                    polyline = [[c[1], c[0]] for c in geometry]
+                    route.polyline_json = json.dumps(polyline)
+                    print(f"Success! {len(polyline)} points.")
+                else:
+                    route.polyline_json = json.dumps([[s.lat, s.lng] for s in stops_data])
+            except:
                 route.polyline_json = json.dumps([[s.lat, s.lng] for s in stops_data])
-        except:
-            route.polyline_json = json.dumps([[s.lat, s.lng] for s in stops_data])
 
         # 4. Create a Bus for this route
         bus_name = f"Bus {idx:02d}"

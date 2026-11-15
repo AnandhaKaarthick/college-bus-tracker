@@ -22,7 +22,14 @@ def init_db(drop=False):
         {"name": "RIT Chennai — Main Gate", "lat": 13.037548330775685, "lng": 80.04498864712842, "order": 9}
     ]
     
-    polyline = [[s["lat"], s["lng"]] for s in ayapakkam_rit_stops]
+    import os
+    geom_file = os.path.join(os.path.dirname(__file__), "routes_geometry.json")
+    if os.path.exists(geom_file):
+        with open(geom_file, "r", encoding="utf-8") as gf:
+            cached_geoms = json.load(gf)
+            polyline = cached_geoms.get("1", [[s["lat"], s["lng"]] for s in ayapakkam_rit_stops])
+    else:
+        polyline = [[s["lat"], s["lng"]] for s in ayapakkam_rit_stops]
     
     route1 = models.Route(
         name="Ayapakkam → RIT Express",

@@ -2,6 +2,7 @@ import { useEffect, Fragment } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../../../context/ThemeContext';
+import routesGeometry from '../../../data/routesGeometry.json';
 
 // --- LEAFLET ASSET FIX ---
 delete L.Icon.Default.prototype._getIconUrl;
@@ -68,16 +69,20 @@ export default function LiveMapPanel({ buses, selectedRouteId, onBusClick, route
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {filteredRoutes.map(route => (
-          <Fragment key={route.id}>
-            {route.polyline && (
-              <Polyline 
-                positions={route.polyline} 
-                color={route.id === selectedRouteId ? route.color : '#94A3B8'} 
-                weight={route.id === selectedRouteId ? 6 : 3}
-                opacity={route.id === selectedRouteId ? 0.8 : 0.3}
-              />
-            )}
+        {filteredRoutes.map(route => {
+          const polyline = (route.polyline && route.polyline.length > 15)
+            ? route.polyline
+            : (routesGeometry[String(route.id)] || route.polyline || []);
+          return (
+            <Fragment key={route.id}>
+              {polyline && polyline.length > 0 && (
+                <Polyline 
+                  positions={polyline} 
+                  color={route.id === selectedRouteId ? route.color : '#94A3B8'} 
+                  weight={route.id === selectedRouteId ? 6 : 3}
+                  opacity={route.id === selectedRouteId ? 0.8 : 0.3}
+                />
+              )}
             {route.stops.map(stop => (
               <Marker 
                 key={stop.id} 
@@ -92,8 +97,9 @@ export default function LiveMapPanel({ buses, selectedRouteId, onBusClick, route
                 <Popup><b>{stop.name}</b><br/>{route.name}</Popup>
               </Marker>
             ))}
-          </Fragment>
-        ))}
+            </Fragment>
+          );
+        })}
 
         {filteredBuses.filter(b => b.lat).map(bus => (
           <Marker 
