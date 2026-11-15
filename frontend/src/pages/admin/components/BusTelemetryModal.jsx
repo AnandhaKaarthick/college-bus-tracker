@@ -14,23 +14,24 @@ export default function BusTelemetryModal({ busId, onClose }) {
       try {
         // Mocking a response for now
         setTimeout(() => {
+          const isBus1 = String(busId) === '1';
           setTelemetry({
             busId: busId,
-            speed: Math.floor(Math.random() * 60) + 20,
-            occupancy: Math.floor(Math.random() * 30) + 10,
+            speed: Math.floor(Math.random() * 25) + 30,
+            occupancy: isBus1 ? 24 : 18,
             capacity: 40,
             status: 'On Track',
             driver: {
-              name: 'Suresh Raina',
-              phone: '+91 98765 43210',
-              license: 'TN-01-2023-0042',
-              rating: 4.8
+              name: isBus1 ? 'Rajesh Kumar' : 'Suresh Raina',
+              phone: isBus1 ? '+91 98765 43210' : '+91 98765 43212',
+              license: isBus1 ? 'TN-09-2021-0194' : 'TN-01-2023-0042',
+              rating: 4.9
             },
-            route: 'Ayapakkam → RIT Express',
-            lastStop: 'Main Gate'
+            route: isBus1 ? 'Ayapakkam → RIT Express' : 'JJ Nagar → RIT Express',
+            lastStop: isBus1 ? 'Paruthipattu' : 'Nolambur Phase 2'
           });
           setIsLoading(false);
-        }, 800);
+        }, 400);
       } catch (err) {
         console.error("Error fetching telemetry:", err);
         setIsLoading(false);

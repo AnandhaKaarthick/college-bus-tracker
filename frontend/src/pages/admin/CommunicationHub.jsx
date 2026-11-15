@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const MOCK_SOS = {
   busId: 'BUS-04',
   busNumber: 'TN-01-AB-1234',
-  driverName: 'Suresh Raina',
+  driverName: 'Rajesh Kumar',
   driverPhone: '+91 98765 43210',
   routeName: 'Ayapakkam → RIT Express',
   lat: 13.0494,
