@@ -1,12 +1,13 @@
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { 
   Activity, Shield, Navigation, 
-  MessageSquare, BarChart3, Bell, LogOut
+  MessageSquare, BarChart3, Bell, LogOut, Compass
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggleButton from '../../components/ThemeToggleButton';
 
 import ActiveRoutesMonitor from './ActiveRoutesMonitor';
+import RouteCreatorStudio from './RouteCreatorStudio';
 import FleetMaintenance from './FleetMaintenance';
 import CommunicationHub from './CommunicationHub';
 import ScheduleManager from './ScheduleManager';
@@ -14,6 +15,7 @@ import InsightsDashboard from './InsightsDashboard';
 
 const NAV_ITEMS = [
   { id: 'monitor',     label: 'Live Monitor',   icon: Activity,      path: '/admin/monitor' },
+  { id: 'routes',      label: 'Route Studio',   icon: Compass,       path: '/admin/routes' },
   { id: 'dispatch',    label: 'Communication',  icon: MessageSquare, path: '/admin/communication' },
   { id: 'fleet',       label: 'Fleet Status',   icon: Navigation,    path: '/admin/fleet' },
   { id: 'schedules',   label: 'Schedules',      icon: Bell,          path: '/admin/schedules' },
@@ -79,6 +81,7 @@ export default function AdminHub() {
       <div className="flex-1 flex flex-col relative overflow-hidden">
         <Routes>
           <Route path="monitor" element={<ActiveRoutesMonitor />} />
+          <Route path="routes" element={<RouteCreatorStudio />} />
           <Route path="communication" element={<CommunicationHub />} />
           <Route path="fleet" element={<FleetMaintenance />} />
           <Route path="schedules" element={<ScheduleManager />} />

@@ -258,6 +258,133 @@ async def get_routes(db: Session = Depends(get_db)):
         })
     return {"routes": result}
 
+class StopCreateInput(BaseModel):
+    name: str
+    lat: float
+    lng: float
+    order: int
+    expected_arrival: Optional[str] = "08:00"
+
+class RouteCreateInput(BaseModel):
+    name: str
+    description: Optional[str] = "Campus transit line"
+    color: Optional[str] = "#3B82F6"
+    stops: List[StopCreateInput]
+    bus_id: Optional[int] = None
+    polyline: Optional[List[List[float]]] = None
+
+@app.post("/api/admin/routes")
+async def create_route(payload: RouteCreateInput, db: Session = Depends(get_db)):
+    if len(payload.stops) < 2:
+        raise HTTPException(status_code=400, detail="A route requires at least 2 stops.")
+    
+    # Calculate polyline: use provided road-snapped polyline if given, else connect stops
+    coords = payload.polyline
+    if not coords or len(coords) < 2:
+        coords = [[s.lat, s.lng] for s in payload.stops]
+    
+    new_route = models.Route(
+        name=payload.name,
+        description=payload.description or "Express transit corridor",
+        color=payload.color or "#3B82F6",
+        polyline_json=json.dumps(coords),
+        is_active=True
+    )
+    db.add(new_route)
+    db.commit()
+    db.refresh(new_route)
+    
+    # Add stops
+    created_stops = []
+    for s in payload.stops:
+        stop_obj = models.Stop(
+            route_id=new_route.id,
+            name=s.name,
+            lat=s.lat,
+            lng=s.lng,
+            order=s.order
+        )
+        db.add(stop_obj)
+        db.commit()
+        db.refresh(stop_obj)
+        created_stops.append(stop_obj)
+        
+        # Add schedule timetable entry
+        sched = models.RouteSchedule(
+            route_id=new_route.id,
+            stop_id=stop_obj.id,
+            expected_arrival=s.expected_arrival or "08:00"
+        )
+        db.add(sched)
+    
+    # Assign bus if requested
+    assigned_bus_name = None
+    if payload.bus_id:
+        bus = db.query(models.Bus).filter(models.Bus.id == payload.bus_id).first()
+        if bus:
+            bus.route_id = new_route.id
+            assigned_bus_name = bus.name
+    
+    db.commit()
+    
+    # Update routes_geometry.json if file exists
+    try:
+        geom_file = os.path.join(os.path.dirname(__file__), "routes_geometry.json")
+        if os.path.exists(geom_file):
+            with open(geom_file, "r", encoding="utf-8") as gf:
+                geom_data = json.load(gf)
+            geom_data[str(new_route.id)] = coords
+            with open(geom_file, "w", encoding="utf-8") as gf:
+                json.dump(geom_data, gf)
+    except Exception as e:
+        print("Error saving to routes_geometry.json:", e)
+
+    # Broadcast new route via WebSocket
+    await manager.broadcast(json.dumps({
+        "type": "route_created",
+        "route_id": new_route.id,
+        "name": new_route.name
+    }))
+    
+    return {
+        "status": "success",
+        "route": {
+            "id": str(new_route.id),
+            "name": new_route.name,
+            "color": new_route.color,
+            "stops_count": len(created_stops),
+            "assigned_bus": assigned_bus_name
+        }
+    }
+
+@app.delete("/api/admin/routes/{route_id}")
+async def delete_route(route_id: int, db: Session = Depends(get_db)):
+    route = db.query(models.Route).filter(models.Route.id == route_id).first()
+    if not route:
+        raise HTTPException(status_code=404, detail="Route not found")
+        
+    # Unassign buses
+    buses = db.query(models.Bus).filter(models.Bus.route_id == route_id).all()
+    for b in buses:
+        b.route_id = None
+        
+    # Delete schedules
+    db.query(models.RouteSchedule).filter(models.RouteSchedule.route_id == route_id).delete()
+    
+    # Delete stops
+    db.query(models.Stop).filter(models.Stop.route_id == route_id).delete()
+    
+    # Delete route
+    db.delete(route)
+    db.commit()
+    
+    await manager.broadcast(json.dumps({
+        "type": "route_deleted",
+        "route_id": route_id
+    }))
+    return {"status": "success", "route_id": route_id}
+
+
 @app.get("/api/admin/buses")
 async def get_admin_buses(db: Session = Depends(get_db)):
     buses = db.query(models.Bus).all()

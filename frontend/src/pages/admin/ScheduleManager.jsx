@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   Clock, Timer, Save, AlertTriangle 
 } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
+import { API_BASE_URL, WS_BASE_URL } from '../../config';
 
 const MOCK_DELAYS = [
   {
@@ -72,7 +72,23 @@ export default function ScheduleManager() {
       } catch (err) { console.error("Error fetching routes:", err); }
     };
     fetchRoutes();
-    return () => { isMounted = false; };
+
+    const ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'route_created' || msg.type === 'route_deleted') {
+          fetchRoutes();
+        }
+      } catch (e) {
+        console.error("WS error in ScheduleManager:", e);
+      }
+    };
+
+    return () => { 
+      isMounted = false; 
+      if (ws.readyState === WebSocket.OPEN) ws.close();
+    };
   }, []);
 
   const handleSelectRoute = (routeId) => {

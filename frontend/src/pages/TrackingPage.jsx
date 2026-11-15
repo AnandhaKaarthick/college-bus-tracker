@@ -27,16 +27,19 @@ export default function TrackingPage() {
       }
     };
     fetchRoutes();
-  }, [selectedRouteId]);
 
-  useEffect(() => {
-    // Listen for updates for the currently selected route's bus
+    // Listen for live updates and newly published routes
     const ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
     ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      if (msg.type === 'bus_position' && String(msg.route_id) === String(selectedRouteId)) {
-        // Update myBus with live telemetry if it matches our selected route
-        setMyBus(prev => ({ ...prev, ...msg }));
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'bus_position' && String(msg.route_id) === String(selectedRouteId)) {
+          setMyBus(prev => ({ ...prev, ...msg }));
+        } else if (msg.type === 'route_created' || msg.type === 'route_deleted') {
+          fetchRoutes();
+        }
+      } catch (e) {
+        console.error("WS error in TrackingPage:", e);
       }
     };
     return () => ws.close();
