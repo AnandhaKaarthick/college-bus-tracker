@@ -7,11 +7,15 @@ from database import Base
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
+    identifier = Column(String(50), unique=True, index=True, nullable=True) # Roll No (e.g. 21CS001), Driver ID (DR-402), or Email
     name = Column(String(100))
     email = Column(String(150), unique=True, index=True)
     hashed_password = Column(String(255))
     role = Column(String(20))  # student, driver, admin
     phone = Column(String(20))
+    assigned_route_id = Column(Integer, ForeignKey("routes.id"), nullable=True)
+    assigned_stop_id = Column(Integer, ForeignKey("stops.id"), nullable=True)
+    assigned_bus_id = Column(Integer, ForeignKey("buses.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class Route(Base):

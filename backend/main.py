@@ -1,10 +1,12 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, BackgroundTasks, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, BackgroundTasks, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import json
 import asyncio
-from typing import List
+import hashlib
+import os
+from typing import List, Optional
 from database import get_db, SessionLocal, engine, Base
 import models
 import math
@@ -74,8 +76,11 @@ async def archive_locations_task():
         finally:
             db.close()
 
+archival_task = None
+
 @app.on_event("startup")
 async def startup_event():
+    global archival_task
     # Ensure database schema is created
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
@@ -92,11 +97,137 @@ async def startup_event():
     finally:
         db.close()
 
-    asyncio.create_task(archive_locations_task())
+    if not os.getenv("TESTING"):
+        archival_task = asyncio.create_task(archive_locations_task())
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    global archival_task
+    if archival_task:
+        archival_task.cancel()
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Real-Time College Bus Tracking API"}
+
+# --- AUTH & SECURITY MODELS ---
+class LoginRequest(BaseModel):
+    identifier: str
+    password: str
+    role: Optional[str] = None
+
+def verify_pwd(plain: str, hashed: str) -> bool:
+    if not hashed:
+        return True
+    if plain == hashed:
+        return True
+    return hashlib.sha256(plain.encode()).hexdigest() == hashed
+
+@app.post("/api/auth/login")
+def login_user(req: LoginRequest, db: Session = Depends(get_db)):
+    ident = req.identifier.strip()
+    
+    # 1. Query user by identifier or email
+    user = db.query(models.User).filter(
+        (models.User.identifier.ilike(ident)) | 
+        (models.User.email.ilike(ident))
+    ).first()
+
+    # Convenience shortcut for "admin"
+    if not user and ident.lower() == "admin":
+        user = db.query(models.User).filter(models.User.role == "admin").first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found. Please check your credentials.")
+
+    if req.role and user.role != req.role:
+        raise HTTPException(status_code=403, detail=f"This account is registered as a {user.role}, not as {req.role}.")
+
+    # 2. Check password
+    if user.hashed_password and not verify_pwd(req.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect password. Please try again.")
+
+    # 3. Retrieve correlated route, stop, and bus
+    assigned_route = db.query(models.Route).filter(models.Route.id == user.assigned_route_id).first() if user.assigned_route_id else None
+    assigned_stop = db.query(models.Stop).filter(models.Stop.id == user.assigned_stop_id).first() if user.assigned_stop_id else None
+    
+    assigned_bus = None
+    if user.assigned_bus_id:
+        assigned_bus = db.query(models.Bus).filter(models.Bus.id == user.assigned_bus_id).first()
+    elif user.role == "driver":
+        assigned_bus = db.query(models.Bus).filter(models.Bus.driver_id == user.id).first()
+    elif assigned_route:
+        assigned_bus = db.query(models.Bus).filter(models.Bus.route_id == assigned_route.id).first()
+
+    token = f"rit_token_{user.id}_{user.role}"
+
+    return {
+        "status": "success",
+        "token": token,
+        "user": {
+            "id": user.id,
+            "identifier": user.identifier or user.email,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "phone": user.phone,
+            "assigned_route_id": str(assigned_route.id) if assigned_route else None,
+            "assigned_route_name": assigned_route.name if assigned_route else None,
+            "assigned_stop_id": str(assigned_stop.id) if assigned_stop else None,
+            "assigned_stop_name": assigned_stop.name if assigned_stop else None,
+            "assigned_bus_id": str(assigned_bus.id) if assigned_bus else None,
+            "assigned_bus_name": assigned_bus.name if assigned_bus else None,
+            "vehicle_number": assigned_bus.vehicle_number if assigned_bus else None,
+        }
+    }
+
+@app.get("/api/auth/me")
+def get_current_user_profile(
+    user_id: Optional[int] = None, 
+    authorization: Optional[str] = Header(None), 
+    db: Session = Depends(get_db)
+):
+    target_id = user_id
+    if not target_id and authorization and "rit_token_" in authorization:
+        try:
+            parts = authorization.replace("Bearer ", "").split("_")
+            target_id = int(parts[2])
+        except:
+            pass
+
+    if not target_id:
+        target_id = 4  # Default student fallback
+
+    user = db.query(models.User).filter(models.User.id == target_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    assigned_route = db.query(models.Route).filter(models.Route.id == user.assigned_route_id).first() if user.assigned_route_id else None
+    assigned_stop = db.query(models.Stop).filter(models.Stop.id == user.assigned_stop_id).first() if user.assigned_stop_id else None
+    
+    assigned_bus = None
+    if user.assigned_bus_id:
+        assigned_bus = db.query(models.Bus).filter(models.Bus.id == user.assigned_bus_id).first()
+    elif user.role == "driver":
+        assigned_bus = db.query(models.Bus).filter(models.Bus.driver_id == user.id).first()
+    elif assigned_route:
+        assigned_bus = db.query(models.Bus).filter(models.Bus.route_id == assigned_route.id).first()
+
+    return {
+        "id": user.id,
+        "identifier": user.identifier or user.email,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "phone": user.phone,
+        "assigned_route_id": str(assigned_route.id) if assigned_route else None,
+        "assigned_route_name": assigned_route.name if assigned_route else None,
+        "assigned_stop_id": str(assigned_stop.id) if assigned_stop else None,
+        "assigned_stop_name": assigned_stop.name if assigned_stop else None,
+        "assigned_bus_id": str(assigned_bus.id) if assigned_bus else None,
+        "assigned_bus_name": assigned_bus.name if assigned_bus else None,
+        "vehicle_number": assigned_bus.vehicle_number if assigned_bus else None,
+    }
 
 # --- REST ENDPOINTS ---
 

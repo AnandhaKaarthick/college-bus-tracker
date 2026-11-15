@@ -39,24 +39,31 @@ export default function LoginPage() {
   const [idValue,      setIdValue]      = useState("");
   const [password,     setPassword]     = useState("");
   const [isLoading,    setIsLoading]    = useState(false);
+  const [errorMsg,     setErrorMsg]     = useState("");
   const { login }                       = useAuth();
   const navigate                        = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMsg("");
     
-    // Simulate network delay
-    setTimeout(() => {
-      const user = login({ id: idValue, role: selectedRole.id });
+    try {
+      const user = await login({ 
+        id: idValue || (selectedRole.id === "admin" ? "admin@rit.edu" : selectedRole.id === "driver" ? "DR-402" : "21CS001"), 
+        password: password || (selectedRole.id === "admin" ? "admin123" : selectedRole.id === "driver" ? "driver123" : "student123"), 
+        role: selectedRole.id 
+      });
       
       // Orchestration: Redirect based on role
       if (user.role === "admin")   navigate("/admin");
       else if (user.role === "driver") navigate("/driver");
       else navigate("/dashboard");
-      
+    } catch (err) {
+      setErrorMsg(err.message || "Authentication failed. Please verify credentials.");
+    } finally {
       setIsLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -171,7 +178,13 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="pt-4">
+            {errorMsg && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-xs font-bold text-center">
+                {errorMsg}
+              </div>
+            )}
+
+            <div className="pt-2">
               <button 
                 type="submit"
                 disabled={isLoading}
@@ -188,6 +201,47 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+
+          {/* Quick Demo Switcher */}
+          <div className="mt-6 pt-6 border-t border-[var(--border)]">
+            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] mb-3 text-center">
+              ⚡ Quick Demo Accounts (Verified DB)
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => { setSelectedRole(ROLES[0]); setIdValue("21CS001"); setPassword("student123"); }}
+                className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--accent-primary-light)] border border-[var(--border)] text-left transition-all"
+              >
+                <div className="text-xs font-black text-[var(--text-primary)]">Arjun K (Student)</div>
+                <div className="text-[10px] text-[var(--text-muted)] font-semibold">21CS001 • Route 1</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole(ROLES[0]); setIdValue("21EC045"); setPassword("student123"); }}
+                className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--accent-primary-light)] border border-[var(--border)] text-left transition-all"
+              >
+                <div className="text-xs font-black text-[var(--text-primary)]">Priya S (Student)</div>
+                <div className="text-[10px] text-[var(--text-muted)] font-semibold">21EC045 • Route 2</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole(ROLES[1]); setIdValue("DR-402"); setPassword("driver123"); }}
+                className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-emerald-500/10 border border-[var(--border)] text-left transition-all"
+              >
+                <div className="text-xs font-black text-[var(--text-primary)]">Rajesh (Driver)</div>
+                <div className="text-[10px] text-emerald-500 font-semibold">DR-402 • Bus 04</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSelectedRole(ROLES[2]); setIdValue("admin@rit.edu"); setPassword("admin123"); }}
+                className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-indigo-500/10 border border-[var(--border)] text-left transition-all"
+              >
+                <div className="text-xs font-black text-[var(--text-primary)]">Super Admin</div>
+                <div className="text-[10px] text-indigo-500 font-semibold">admin@rit.edu</div>
+              </button>
+            </div>
+          </div>
 
           <div className="mt-8 pt-8 border-t border-[var(--border)]/50 text-center">
             <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest leading-relaxed">

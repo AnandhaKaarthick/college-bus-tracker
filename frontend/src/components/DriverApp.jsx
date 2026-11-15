@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Shield, MapPin, Navigation, Signal, Radio, 
   MessageSquare, AlertTriangle, Send, Phone, 
-  Info, Zap, User, Settings
+  Info, Zap, User, Settings, LogOut
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { WS_BASE_URL } from '../config';
 
 export default function DriverApp() {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('trip');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [location, setLocation] = useState(null);
@@ -17,13 +19,15 @@ export default function DriverApp() {
   const wsRef = useRef(null);
   const watchIdRef = useRef(null);
   
+  const assignedBusId = user?.assigned_bus_id || '1';
+
   useEffect(() => {
     if (isBroadcasting) {
-      wsRef.current = new WebSocket(`${WS_BASE_URL}/ws/driver/1`);
+      wsRef.current = new WebSocket(`${WS_BASE_URL}/ws/driver/${assignedBusId}`);
       wsRef.current.onerror = () => setError('Connection lost. Reconnecting...');
       return () => { if (wsRef.current) wsRef.current.close(); };
     }
-  }, [isBroadcasting]);
+  }, [isBroadcasting, assignedBusId]);
 
   const toggleBroadcasting = () => {
     if (isBroadcasting) {
@@ -79,14 +83,20 @@ export default function DriverApp() {
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-[#030213]" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Capt. Rajesh</h2>
-            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1.5 opacity-80">Unit 01 • Active Shift</p>
+            <h2 className="text-2xl font-bold text-white tracking-tight leading-none">{user?.name || 'Capt. Rajesh'}</h2>
+            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1.5 opacity-80">
+              {user?.assigned_bus_name || 'Bus 04'} ({user?.vehicle_number || 'TN 09 AB 1234'}) • {user?.assigned_route_name || 'Active Shift'}
+            </p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <button className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
-            <Settings size={20} />
+          <button 
+            onClick={logout}
+            title="Log Out"
+            className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-white/10 transition-all"
+          >
+            <LogOut size={20} />
           </button>
           <button 
             onClick={handleSOS} 

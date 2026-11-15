@@ -2,10 +2,12 @@ import { useState } from "react";
 import { 
   User, Mail, Phone, Hash, MapPin, 
   Bell, Heart, Shield, Save, Plus, 
-  ChevronRight, Sparkles
+  ChevronRight, Sparkles, LogOut, Navigation
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProfilePage() {
+  const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState({
     sms: true,
     push: false,
@@ -29,21 +31,33 @@ export default function ProfilePage() {
             
             {/* User Info Card */}
             <div className="bg-[var(--bg-secondary)] p-10 rounded-[50px] border border-[var(--border)] shadow-sm">
-              <div className="flex items-center gap-8 mb-12">
-                <div className="w-24 h-24 bg-blue-600 rounded-[35px] flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-600/20">
-                  ST
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 bg-blue-600 rounded-[28px] flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-blue-600/20">
+                    {user?.name ? user.name.slice(0, 2).toUpperCase() : 'ST'}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">{user?.name || "Student User"}</h2>
+                    <p className="text-blue-600 font-bold text-xs uppercase tracking-wider">{user?.role || "Student"} • RIT Chennai</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Student User</h2>
-                  <p className="text-blue-600 font-bold text-sm">B.Tech Computer Science</p>
-                </div>
+
+                <button 
+                  onClick={logout}
+                  className="px-5 py-2.5 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+                >
+                  <LogOut size={16} />
+                  <span>Log Out</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoField icon={Mail} label="Email Address" value="user@rit.ac.in" />
-                <InfoField icon={Phone} label="Phone Number" value="+91 98765 43210" />
-                <InfoField icon={Hash} label="Roll Number" value="21CS104" />
-                <InfoField icon={MapPin} label="Default Stop" value="Main Gate, Porur" />
+                <InfoField icon={Mail} label="Email Address" value={user?.email || "user@rit.ac.in"} />
+                <InfoField icon={Phone} label="Phone Number" value={user?.phone || "+91 98765 43210"} />
+                <InfoField icon={Hash} label="Roll / Identifier" value={user?.identifier || "21CS001"} />
+                <InfoField icon={MapPin} label="Default Pickup Stop" value={user?.assigned_stop_name || "Ayapakkam park"} />
+                <InfoField icon={Navigation} label="Assigned Route" value={user?.assigned_route_name || "Ayapakkam → RIT Express"} />
+                <InfoField icon={Shield} label="Assigned Fleet Bus" value={`${user?.assigned_bus_name || 'Bus 04'} (${user?.vehicle_number || 'TN 09 AB 1234'})`} />
               </div>
             </div>
 
