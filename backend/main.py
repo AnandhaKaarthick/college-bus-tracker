@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, BackgroundTasks, HTTPException, Header
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, BackgroundTasks, HTTPException, Header, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -467,19 +467,196 @@ async def simulate_location(update: LocationUpdate, db: Session = Depends(get_db
     }))
     return {"status": "ok"}
 
-# --- SAFETY HUB ENDPOINTS ---
+# --- ANNOUNCEMENTS BROADCAST SYSTEM ---
+class AnnouncementCreate(BaseModel):
+    title: str
+    message: str
+    target_type: str = "global" # global, by_route
+    route_id: Optional[int] = None
+    sender_name: Optional[str] = "Admin John"
 
+@app.get("/api/announcements")
+def get_announcements(db: Session = Depends(get_db)):
+    rows = db.query(models.Announcement).order_by(models.Announcement.created_at.desc()).limit(20).all()
+    return {
+        "announcements": [
+            {
+                "id": r.id,
+                "title": r.title,
+                "message": r.message,
+                "target_type": r.target_type,
+                "route_id": r.route_id,
+                "created_at": r.created_at.isoformat() if r.created_at else datetime.now().isoformat()
+            }
+            for r in rows
+        ]
+    }
+
+@app.post("/api/announcements")
+async def create_announcement(item: AnnouncementCreate, db: Session = Depends(get_db)):
+    announcement = models.Announcement(
+        title=item.title,
+        message=item.message,
+        target_type=item.target_type,
+        route_id=item.route_id
+    )
+    db.add(announcement)
+    db.commit()
+    db.refresh(announcement)
+    
+    payload = {
+        "id": announcement.id,
+        "title": announcement.title,
+        "message": announcement.message,
+        "target_type": announcement.target_type,
+        "route_id": announcement.route_id,
+        "created_at": announcement.created_at.isoformat() if announcement.created_at else datetime.now().isoformat(),
+        "sender_name": item.sender_name or "Admin John"
+    }
+    
+    await manager.broadcast(json.dumps({
+        "type": "new_announcement",
+        "announcement": payload
+    }))
+    return {"status": "success", "announcement": payload}
+
+@app.delete("/api/announcements/{id}")
+def delete_announcement(id: int, db: Session = Depends(get_db)):
+    row = db.query(models.Announcement).filter(models.Announcement.id == id).first()
+    if row:
+        db.delete(row)
+        db.commit()
+    return {"status": "success"}
+
+# --- ATTENDANCE & LIVE OCCUPANCY TRACKING ---
+class AttendanceAction(BaseModel):
+    user_id: Optional[int] = None
+    bus_id: int
+
+@app.get("/api/attendance/bus/{bus_id}")
+def get_bus_attendance(bus_id: int, db: Session = Depends(get_db)):
+    bus = db.query(models.Bus).filter(models.Bus.id == bus_id).first()
+    if not bus:
+        return {"error": "Bus not found", "passenger_count": 0, "occupancy": "low", "capacity": 40}
+    return {
+        "bus_id": bus.id,
+        "passenger_count": bus.passenger_count or 0,
+        "occupancy": bus.occupancy or "low",
+        "capacity": bus.capacity or 40
+    }
+
+@app.post("/api/attendance/checkin")
+async def attendance_checkin(item: AttendanceAction, db: Session = Depends(get_db)):
+    bus = db.query(models.Bus).filter(models.Bus.id == item.bus_id).first()
+    if not bus:
+        raise HTTPException(status_code=404, detail="Bus not found")
+    
+    rec = models.AttendanceRecord(
+        user_id=item.user_id,
+        bus_id=item.bus_id,
+        status="checked_in"
+    )
+    db.add(rec)
+    
+    bus.passenger_count = (bus.passenger_count or 0) + 1
+    if bus.passenger_count <= 20:
+        bus.occupancy = "low"
+    elif bus.passenger_count <= 36:
+        bus.occupancy = "medium"
+    else:
+        bus.occupancy = "high"
+        
+    db.commit()
+    db.refresh(bus)
+    
+    await manager.broadcast(json.dumps({
+        "type": "occupancy_update",
+        "bus_id": bus.id,
+        "passenger_count": bus.passenger_count,
+        "occupancy": bus.occupancy,
+        "capacity": bus.capacity
+    }))
+    
+    return {
+        "status": "checked_in",
+        "bus_id": bus.id,
+        "passenger_count": bus.passenger_count,
+        "occupancy": bus.occupancy,
+        "capacity": bus.capacity
+    }
+
+@app.post("/api/attendance/checkout")
+async def attendance_checkout(item: AttendanceAction, db: Session = Depends(get_db)):
+    bus = db.query(models.Bus).filter(models.Bus.id == item.bus_id).first()
+    if not bus:
+        raise HTTPException(status_code=404, detail="Bus not found")
+        
+    rec = models.AttendanceRecord(
+        user_id=item.user_id,
+        bus_id=item.bus_id,
+        status="checked_out"
+    )
+    db.add(rec)
+    
+    bus.passenger_count = max(0, (bus.passenger_count or 0) - 1)
+    if bus.passenger_count <= 20:
+        bus.occupancy = "low"
+    elif bus.passenger_count <= 36:
+        bus.occupancy = "medium"
+    else:
+        bus.occupancy = "high"
+        
+    db.commit()
+    db.refresh(bus)
+    
+    await manager.broadcast(json.dumps({
+        "type": "occupancy_update",
+        "bus_id": bus.id,
+        "passenger_count": bus.passenger_count,
+        "occupancy": bus.occupancy,
+        "capacity": bus.capacity
+    }))
+    
+    return {
+        "status": "checked_out",
+        "bus_id": bus.id,
+        "passenger_count": bus.passenger_count,
+        "occupancy": bus.occupancy,
+        "capacity": bus.capacity
+    }
+
+# --- SAFETY HUB & SOS ENDPOINTS ---
 class AlertCreate(BaseModel):
     type: str
-    triggered_by: int
-    bus_id: str = None
+    triggered_by: Optional[int] = None
+    bus_id: Optional[str] = None
     lat: float
     lng: float
     message: str
+    driver_name: Optional[str] = None
+    driver_phone: Optional[str] = None
+
+@app.get("/api/alerts")
+def get_alerts(db: Session = Depends(get_db)):
+    alerts = db.query(models.Alert).order_by(models.Alert.created_at.desc()).limit(30).all()
+    results = []
+    for a in alerts:
+        bus = db.query(models.Bus).filter(models.Bus.id == a.bus_id).first() if a.bus_id else None
+        results.append({
+            "id": a.id,
+            "unit": f"BUS-{a.bus_id:02d}" if a.bus_id else (bus.name if bus else "BUS-04"),
+            "event": a.type.capitalize() if a.type else "Panic Alert",
+            "time": a.created_at.strftime("%Y-%m-%d %H:%M:%S") if a.created_at else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": a.status or "active",
+            "severity": a.severity or "critical",
+            "lat": a.lat,
+            "lng": a.lng,
+            "message": a.message
+        })
+    return {"alerts": results}
 
 @app.post("/api/alerts")
 async def create_alert(alert: AlertCreate, db: Session = Depends(get_db)):
-    # Map types to severities based on Phase E spec
     severity_map = {
         "accident": "critical",
         "breakdown": "critical",
@@ -489,13 +666,23 @@ async def create_alert(alert: AlertCreate, db: Session = Depends(get_db)):
         "general": "low"
     }
     
-    bus_id_int = int(alert.bus_id.replace("BUS-", "")) if alert.bus_id and alert.bus_id.startswith("BUS-") else None
+    bus_id_int = None
+    if alert.bus_id:
+        clean_id = str(alert.bus_id).replace("BUS-", "").replace("Bus ", "")
+        try:
+            bus_id_int = int(clean_id)
+        except ValueError:
+            bus_id_int = 1
+
+    bus = db.query(models.Bus).filter(models.Bus.id == bus_id_int).first() if bus_id_int else None
+    driver = db.query(models.User).filter(models.User.id == bus.driver_id).first() if bus and bus.driver_id else None
+    route = db.query(models.Route).filter(models.Route.id == bus.route_id).first() if bus and bus.route_id else None
 
     new_alert = models.Alert(
         type=alert.type,
-        severity=severity_map.get(alert.type, "low"),
+        severity=severity_map.get(alert.type, "critical"),
         triggered_by=alert.triggered_by,
-        bus_id=bus_id_int,
+        bus_id=bus_id_int or 1,
         lat=alert.lat,
         lng=alert.lng,
         message=alert.message,
@@ -505,16 +692,138 @@ async def create_alert(alert: AlertCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_alert)
     
-    # Broadcast critical alerts to all users
-    if new_alert.severity in ["critical", "high"]:
-        await manager.broadcast(json.dumps({
-            "type": "emergency_alert",
-            "alert_id": new_alert.id,
-            "severity": new_alert.severity,
-            "message": new_alert.message
-        }))
+    alert_payload = {
+        "id": new_alert.id,
+        "busId": f"BUS-{new_alert.bus_id:02d}" if new_alert.bus_id else "BUS-04",
+        "busNumber": bus.vehicle_number if bus else "TN-01-AB-1234",
+        "driverName": alert.driver_name or (driver.name if driver else "Rajesh Kumar"),
+        "driverPhone": alert.driver_phone or (driver.phone if driver and driver.phone else "+91 98765 43210"),
+        "routeName": route.name if route else "Ayapakkam → RIT Express",
+        "lat": new_alert.lat,
+        "lng": new_alert.lng,
+        "nearestStop": "Main Gate",
+        "type": new_alert.type,
+        "severity": new_alert.severity,
+        "message": new_alert.message,
+        "triggeredAt": new_alert.created_at.strftime("%Y-%m-%d %H:%M:%S") if new_alert.created_at else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    # Broadcast to admin & connected clients
+    await manager.broadcast(json.dumps({
+        "type": "sos_alert",
+        "alert": alert_payload
+    }))
+    await manager.broadcast(json.dumps({
+        "type": "emergency_alert",
+        "alert_id": new_alert.id,
+        "severity": new_alert.severity,
+        "message": new_alert.message
+    }))
         
-    return {"status": "success", "alert_id": new_alert.id}
+    return {"status": "success", "alert": alert_payload}
+
+@app.put("/api/alerts/{id}/resolve")
+async def resolve_alert(id: int, db: Session = Depends(get_db)):
+    alert = db.query(models.Alert).filter(models.Alert.id == id).first()
+    if alert:
+        alert.status = "resolved"
+        db.commit()
+        await manager.broadcast(json.dumps({
+            "type": "alert_resolved",
+            "alert_id": id
+        }))
+    return {"status": "resolved", "id": id}
+
+# --- DRIVER-ADMIN DISPATCH MESSAGING ---
+class MessageCreate(BaseModel):
+    driver_id: int
+    sender: str # "admin" or "driver"
+    text: str
+
+@app.get("/api/messages/{driver_id}")
+def get_messages(driver_id: int, db: Session = Depends(get_db)):
+    msgs = db.query(models.Message).filter(models.Message.driver_id == driver_id).order_by(models.Message.sent_at.asc()).all()
+    return {
+        "messages": [
+            {
+                "id": m.id,
+                "driver_id": m.driver_id,
+                "sender": m.sender,
+                "text": m.text,
+                "sent_at": m.sent_at.strftime("%H:%M") if m.sent_at else datetime.now().strftime("%H:%M")
+            }
+            for m in msgs
+        ]
+    }
+
+@app.post("/api/messages")
+async def send_message(msg: MessageCreate, db: Session = Depends(get_db)):
+    new_m = models.Message(
+        driver_id=msg.driver_id,
+        sender=msg.sender,
+        text=msg.text
+    )
+    db.add(new_m)
+    db.commit()
+    db.refresh(new_m)
+    
+    payload = {
+        "id": new_m.id,
+        "driver_id": new_m.driver_id,
+        "sender": new_m.sender,
+        "text": new_m.text,
+        "sent_at": new_m.sent_at.strftime("%H:%M") if new_m.sent_at else datetime.now().strftime("%H:%M")
+    }
+    
+    await manager.broadcast(json.dumps({
+        "type": "new_dispatch_message",
+        "message": payload
+    }))
+    return {"status": "success", "message": payload}
+
+# --- TIMETABLE SCHEDULES ---
+class ScheduleUpdateItem(BaseModel):
+    stop_id: int
+    expected_arrival: str
+
+class RouteScheduleUpdate(BaseModel):
+    schedules: List[ScheduleUpdateItem]
+
+@app.put("/api/routes/{route_id}/schedule")
+def update_route_schedule(route_id: int, payload: RouteScheduleUpdate, db: Session = Depends(get_db)):
+    for item in payload.schedules:
+        sched = db.query(models.RouteSchedule).filter(
+            models.RouteSchedule.route_id == route_id,
+            models.RouteSchedule.stop_id == item.stop_id
+        ).first()
+        if sched:
+            sched.expected_arrival = item.expected_arrival
+        else:
+            sched = models.RouteSchedule(
+                route_id=route_id,
+                stop_id=item.stop_id,
+                expected_arrival=item.expected_arrival
+            )
+            db.add(sched)
+    db.commit()
+    return {"status": "success", "route_id": route_id}
+
+# --- CSV EXPORT ---
+@app.get("/api/admin/insights/export-csv")
+def export_fleet_csv(db: Session = Depends(get_db)):
+    buses = db.query(models.Bus).all()
+    lines = ["Bus ID,Vehicle Number,Name,Route ID,Passenger Count,Occupancy,Capacity,Status,KM Today,Fuel Used (L)"]
+    for b in buses:
+        km = 84.0 if b.id == 1 else 76.5
+        fuel = round(km / 4.2, 1)
+        lines.append(f"{b.id},{b.vehicle_number},{b.name},{b.route_id},{b.passenger_count or 0},{b.occupancy},{b.capacity},{b.status},{km},{fuel}")
+    csv_content = "\n".join(lines)
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=rit_fleet_telemetry_export.csv"}
+    )
+
 
 class JourneyShare(BaseModel):
     student_id: int

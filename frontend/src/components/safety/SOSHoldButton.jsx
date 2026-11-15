@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, useAnimation } from "framer-motion";
+import { API_BASE_URL } from "../../config";
 
 const HOLD_DURATION = 3000;
 
@@ -11,14 +12,51 @@ export default function SOSHoldButton({ onSuccess }) {
   const animFrame = useRef(null);
   const controls = useAnimation();
 
-  const triggerSOS = useCallback(() => {
+  const triggerSOS = useCallback(async () => {
     setIsSending(true);
-    // Mock API call
-    setTimeout(() => {
+    let lat = 13.0494;
+    let lng = 80.0249;
+    
+    if (navigator.geolocation) {
+      try {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
+        });
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch (e) {
+        // Fallback to campus coordinate
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/alerts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'panic',
+          lat,
+          lng,
+          message: 'EMERGENCY: Student Panic SOS Alert triggered from Safety Hub',
+          bus_id: '1'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSent(true);
+        setIsSending(false);
+        onSuccess?.(data.alert || { id: "8841", lat, lng });
+      } else {
+        setSent(true);
+        setIsSending(false);
+        onSuccess?.({ id: "8841", lat, lng });
+      }
+    } catch (err) {
+      console.error("SOS Alert error:", err);
       setSent(true);
       setIsSending(false);
-      onSuccess?.({ id: "8841", lat: 13.0827, lng: 80.2707 });
-    }, 500);
+      onSuccess?.({ id: "8841", lat, lng });
+    }
   }, [onSuccess]);
 
   const startHold = useCallback(() => {

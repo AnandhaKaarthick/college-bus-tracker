@@ -29,6 +29,34 @@ export default function ScheduleManager() {
   const [scheduleData, setScheduleData] = useState([]);
   const [delayData] = useState(MOCK_DELAYS);
   const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+
+  const handleCommitChanges = async () => {
+    if (!selectedRouteId || scheduleData.length === 0) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/routes/${selectedRouteId}/schedule`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schedules: scheduleData.map(item => ({
+            stop_id: item.id,
+            expected_arrival: item.time
+          }))
+        })
+      });
+      if (res.ok) {
+        setIsDirty(false);
+        setSaveMessage('Timetable changes committed to database successfully!');
+        setTimeout(() => setSaveMessage(''), 4000);
+      }
+    } catch (e) {
+      console.error("Error saving timetable:", e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -131,8 +159,14 @@ export default function ScheduleManager() {
                     </tbody>
                   </table>
                 </div>
+                {saveMessage && (
+                  <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-2xl text-green-500 text-xs font-bold text-center">
+                    ✓ {saveMessage}
+                  </div>
+                )}
                 <button 
-                  disabled={!isDirty}
+                  disabled={!isDirty || isSaving}
+                  onClick={handleCommitChanges}
                   className={`w-full py-5 rounded-3xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${
                     isDirty 
                       ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95' 
@@ -140,7 +174,7 @@ export default function ScheduleManager() {
                   }`}
                 >
                   <Save size={18} />
-                  COMMIT CHANGES
+                  {isSaving ? 'SAVING...' : 'COMMIT CHANGES'}
                 </button>
               </div>
             ) : (

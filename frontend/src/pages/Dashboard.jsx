@@ -76,11 +76,9 @@ export default function Dashboard() {
 
             {/* Alerts */}
             <div className="flex flex-col gap-2 mt-2">
-               <div className="flex justify-between items-center px-1">
+              <div className="flex justify-between items-center px-1">
                 <h3 className="font-semibold text-[var(--text-primary)]">Admin Alerts</h3>
-                <button className="text-xs font-bold text-[var(--accent-primary)] uppercase tracking-wider">
-                  Clear All
-                </button>
+                <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full uppercase">Live Sync</span>
               </div>
               <AlertsFeed />
             </div>

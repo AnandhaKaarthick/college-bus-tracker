@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Shield, MapPin, Navigation, Signal, Radio, 
   MessageSquare, AlertTriangle, Send, Phone, 
-  Info, Zap, User, Settings, LogOut
+  Info, Zap, User, Settings, LogOut, Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { WS_BASE_URL } from '../config';
+import { WS_BASE_URL, API_BASE_URL } from '../config';
 
 export default function DriverApp() {
   const { user, logout } = useAuth();
@@ -14,13 +14,43 @@ export default function DriverApp() {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState('');
   const [complaint, setComplaint] = useState('');
+  const [reportSuccess, setReportSuccess] = useState('');
   const [isSOSActive, setIsSOSActive] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [passengerCount, setPassengerCount] = useState(24);
+  const [occupancy, setOccupancy] = useState('medium');
   
   const wsRef = useRef(null);
   const watchIdRef = useRef(null);
   
   const assignedBusId = user?.assigned_bus_id || '1';
 
+  // Fetch initial messages and occupancy
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const attRes = await fetch(`${API_BASE_URL}/api/attendance/bus/${assignedBusId}`);
+        if (attRes.ok) {
+          const data = await attRes.json();
+          setPassengerCount(data.passenger_count || 24);
+          setOccupancy(data.occupancy || 'medium');
+        }
+
+        if (user?.id) {
+          const msgRes = await fetch(`${API_BASE_URL}/api/messages/${user.id}`);
+          if (msgRes.ok) {
+            const data = await msgRes.json();
+            setMessages(data.messages || []);
+          }
+        }
+      } catch (e) {
+        console.error("Initial fetch error in DriverApp:", e);
+      }
+    };
+    fetchInitialData();
+  }, [assignedBusId, user?.id]);
+
+  // Telemetry WebSocket broadcast
   useEffect(() => {
     if (isBroadcasting) {
       wsRef.current = new WebSocket(`${WS_BASE_URL}/ws/driver/${assignedBusId}`);
@@ -28,6 +58,27 @@ export default function DriverApp() {
       return () => { if (wsRef.current) wsRef.current.close(); };
     }
   }, [isBroadcasting, assignedBusId]);
+
+  // General WebSocket listener for dispatch messages & attendance
+  useEffect(() => {
+    const generalWs = new WebSocket(`${WS_BASE_URL}/ws/buses`);
+    generalWs.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'occupancy_update' && String(msg.bus_id) === String(assignedBusId)) {
+          setPassengerCount(msg.passenger_count);
+          setOccupancy(msg.occupancy);
+        } else if (msg.type === 'new_dispatch_message' && msg.message?.driver_id === user?.id) {
+          setMessages(prev => [...prev, msg.message]);
+        }
+      } catch (err) {
+        console.error("Driver WS listener error:", err);
+      }
+    };
+    return () => {
+      if (generalWs.readyState === WebSocket.OPEN) generalWs.close();
+    };
+  }, [assignedBusId, user?.id]);
 
   const toggleBroadcasting = () => {
     if (isBroadcasting) {
@@ -59,9 +110,57 @@ export default function DriverApp() {
     }
   };
 
-  const handleSOS = () => {
+  const handleSOS = async () => {
     setIsSOSActive(true);
+    try {
+      await fetch(`${API_BASE_URL}/api/alerts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'panic',
+          bus_id: assignedBusId,
+          triggered_by: user?.id,
+          lat: location?.lat || 13.0494,
+          lng: location?.lng || 80.0249,
+          message: `EMERGENCY SOS: Driver ${user?.name || 'Rajesh'} triggered panic alert on ${user?.assigned_bus_name || 'Bus 04'}`,
+          driver_name: user?.name || 'Rajesh Kumar',
+          driver_phone: user?.phone || '+91 98765 43210'
+        })
+      });
+    } catch (err) {
+      console.error("SOS trigger error:", err);
+    }
     setTimeout(() => setIsSOSActive(false), 5000);
+  };
+
+  const handleSubmitComplaint = async (e) => {
+    e.preventDefault();
+    if (!complaint.trim()) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          driver_id: user?.id || 2,
+          sender: 'driver',
+          text: complaint.trim()
+        })
+      });
+
+      if (res.ok) {
+        setComplaint('');
+        setReportSuccess('Report transmitted to Admin Control Room!');
+        const updated = await fetch(`${API_BASE_URL}/api/messages/${user?.id || 2}`);
+        if (updated.ok) {
+          const data = await updated.json();
+          setMessages(data.messages || []);
+        }
+        setTimeout(() => setReportSuccess(''), 4000);
+      }
+    } catch (err) {
+      console.error("Error submitting report:", err);
+    }
   };
 
   return (
@@ -102,7 +201,7 @@ export default function DriverApp() {
             onClick={handleSOS} 
             className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border ${
               isSOSActive 
-                ? 'bg-red-600 border-red-500' 
+                ? 'bg-red-600 border-red-500 animate-pulse text-white' 
                 : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-600 hover:text-white'
             }`}
           >
@@ -144,8 +243,8 @@ export default function DriverApp() {
                 onClick={toggleBroadcasting}
                 className={`relative z-10 w-full py-7 rounded-[40px] font-bold text-2xl transition-all active:scale-[0.96] uppercase tracking-widest border-4 ${
                   isBroadcasting 
-                    ? 'bg-white text-blue-700 border-white' 
-                    : 'bg-blue-600 text-white border-blue-500/50 hover:bg-blue-500'
+                    ? 'bg-white text-blue-700 border-white shadow-2xl' 
+                    : 'bg-blue-600 text-white border-blue-500/50 hover:bg-blue-500 shadow-xl'
                 }`}
               >
                 {isBroadcasting ? 'Stop Session' : 'Start Journey'}
@@ -153,33 +252,40 @@ export default function DriverApp() {
             </div>
 
             {/* Metrics Dashboard */}
-            {isBroadcasting && location ? (
-              <div className="grid grid-cols-2 gap-5">
-                <MetricCard icon={Navigation} label="Ground Speed" value={location.speed} unit="KM/H" color="blue" />
-                <MetricCard icon={Signal} label="Network Link" value="98%" unit="Stable" color="emerald" />
-                
-                <div className="col-span-2 p-8 rounded-[50px] bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-between group transition-all">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Active Route Progress</span>
-                    </div>
-                    <div className="text-3xl font-bold text-white tracking-tight">4.2 <span className="text-sm font-bold text-slate-500 uppercase">KM Tracked</span></div>
-                    <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 w-[42%] rounded-full" />
-                    </div>
+            <div className="grid grid-cols-2 gap-5">
+              <MetricCard 
+                icon={Navigation} 
+                label="Ground Speed" 
+                value={location?.speed || (isBroadcasting ? '38' : '0')} 
+                unit="KM/H" 
+                color="blue" 
+              />
+              <MetricCard 
+                icon={User} 
+                label="Students Boarded" 
+                value={passengerCount} 
+                unit={`/ 40 (${occupancy.toUpperCase()})`} 
+                color="emerald" 
+              />
+              
+              <div className="col-span-2 p-8 rounded-[50px] bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-between group transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Active Shift Telemetry</span>
                   </div>
-                  <div className="w-20 h-20 bg-blue-600/10 rounded-full border-4 border-blue-600/20 border-t-blue-600 flex items-center justify-center">
-                    <Zap size={24} className="text-blue-500" />
+                  <div className="text-3xl font-bold text-white tracking-tight">
+                    {isBroadcasting ? 'LIVE GPS BROADCAST' : 'STANDBY'} <span className="text-sm font-bold text-slate-500 uppercase">ONLINE</span>
+                  </div>
+                  <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className={`h-full ${isBroadcasting ? 'bg-blue-500 w-[65%]' : 'bg-slate-700 w-[10%]'}`} />
                   </div>
                 </div>
+                <div className="w-20 h-20 bg-blue-600/10 rounded-full border-4 border-blue-600/20 border-t-blue-600 flex items-center justify-center">
+                  <Zap size={24} className="text-blue-500" />
+                </div>
               </div>
-            ) : (
-              <div className="p-8 rounded-[50px] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center opacity-40">
-                <Info size={32} className="mb-4 text-slate-600" />
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Live stats appear after initialization</p>
-              </div>
-            )}
+            </div>
           </div>
         ) : (
           <div className="space-y-8 max-w-lg mx-auto">
@@ -190,32 +296,74 @@ export default function DriverApp() {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-white tracking-tight uppercase">Control Room</h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Direct link to Admin</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Direct link to Admin Dispatch</p>
               </div>
             </div>
 
+            {/* Conversation History */}
+            {messages.length > 0 && (
+              <div className="space-y-3 bg-white/5 p-6 rounded-[40px] border border-white/10 max-h-60 overflow-y-auto">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Recent Dispatch Instructions</div>
+                {messages.map(m => {
+                  const isMe = m.sender === 'driver';
+                  return (
+                    <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[85%] p-3 rounded-2xl text-xs font-bold ${
+                        isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white/10 text-slate-200 rounded-tl-none border border-white/10'
+                      }`}>
+                        <p>{m.text}</p>
+                        <div className="text-[8px] opacity-70 mt-1 uppercase text-right">{m.sent_at} • {isMe ? 'You' : 'Admin'}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Reporting Interface */}
-            <div className="space-y-5">
+            <form onSubmit={handleSubmitComplaint} className="space-y-5">
+              {reportSuccess && (
+                <div className="p-4 bg-green-500/20 border border-green-500/40 rounded-2xl text-green-300 text-xs font-bold flex items-center gap-2">
+                  <Check size={16} />
+                  <span>{reportSuccess}</span>
+                </div>
+              )}
               <div className="flex justify-between items-end px-4">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Report Details</label>
-                <span className="text-[10px] font-bold text-blue-500">Priority: Normal</span>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Report Traffic / Delay to Admin</label>
+                <span className="text-[10px] font-bold text-blue-500">Live Dispatch</span>
               </div>
               <textarea 
                 value={complaint}
                 onChange={(e) => setComplaint(e.target.value)}
-                placeholder="Briefly explain the situation..."
-                className="w-full bg-white/5 border border-white/10 rounded-[40px] p-8 text-white focus:outline-none focus:border-blue-600 transition-all min-h-[180px] placeholder:text-slate-700 font-medium"
+                placeholder="e.g. Heavy traffic at Porur junction, ETA will be 10 minutes later..."
+                className="w-full bg-white/5 border border-white/10 rounded-[40px] p-8 text-white focus:outline-none focus:border-blue-600 transition-all min-h-[160px] placeholder:text-slate-600 font-medium text-sm"
+                required
               />
-              <button className="w-full group bg-white text-[#030213] py-6 rounded-[40px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:bg-blue-500 hover:text-white active:scale-[0.98]">
-                Submit Report
+              <button 
+                type="submit"
+                className="w-full group bg-white text-[#030213] py-6 rounded-[40px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:bg-blue-500 hover:text-white active:scale-[0.98]"
+              >
+                Send to Dispatch
                 <Send size={18} />
               </button>
-            </div>
+            </form>
 
             {/* Quick Dial Row */}
             <div className="grid grid-cols-2 gap-5">
-              <ActionButton icon={Phone} label="Emergency Dial" color="emerald" />
-              <ActionButton icon={Info} label="Fleet Status" color="blue" />
+              <a 
+                href="tel:+914423456789" 
+                className="p-8 rounded-[45px] border flex flex-col items-center gap-3 transition-all active:scale-[0.96] hover:bg-emerald-600 hover:text-white text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+              >
+                <Phone size={28} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Emergency Dial</span>
+              </a>
+              <div 
+                className="p-8 rounded-[45px] border flex flex-col items-center gap-3 transition-all hover:bg-blue-600 hover:text-white text-blue-500 bg-blue-500/10 border-blue-500/20 cursor-pointer"
+                onClick={() => setActiveTab('trip')}
+              >
+                <Info size={28} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Fleet Shift Status</span>
+              </div>
             </div>
           </div>
         )}
@@ -226,7 +374,7 @@ export default function DriverApp() {
         <div className="fixed bottom-36 right-8">
           <button 
             onClick={handleSOS}
-            className="w-24 h-24 bg-red-600 text-white rounded-[40px] flex flex-col items-center justify-center shadow-2xl animate-pulse border-4 border-red-500/50"
+            className="w-24 h-24 bg-red-600 text-white rounded-[40px] flex flex-col items-center justify-center shadow-2xl animate-pulse border-4 border-red-500/50 hover:scale-105 active:scale-95 transition-transform"
           >
             <Zap size={28} className="mb-1" />
             <span className="text-[10px] font-bold uppercase tracking-widest">SOS</span>
@@ -247,7 +395,7 @@ export default function DriverApp() {
             active={activeTab === 'support'} 
             onClick={() => setActiveTab('support')} 
             icon={MessageSquare} 
-            label="Admin Hub" 
+            label="Dispatch Room" 
           />
         </div>
       </div>
@@ -268,23 +416,10 @@ function MetricCard({ icon: Icon, label, value, unit, color }) {
         <Icon size={20} />
       </div>
       <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">{label}</div>
-      <div className="font-bold text-3xl text-white tracking-tight">
+      <div className="font-bold text-2xl text-white tracking-tight">
         {value} <span className="text-xs text-slate-500 uppercase">{unit}</span>
       </div>
     </div>
-  );
-}
-
-function ActionButton({ icon: Icon, label, color }) {
-  const colors = {
-    emerald: 'hover:bg-emerald-600 hover:text-white text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-    blue: 'hover:bg-blue-600 hover:text-white text-blue-500 bg-blue-500/10 border-blue-500/20'
-  };
-  return (
-    <button className={`p-8 rounded-[45px] border flex flex-col items-center gap-3 transition-all active:scale-[0.96] ${colors[color]}`}>
-      <Icon size={28} />
-      <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
-    </button>
   );
 }
 

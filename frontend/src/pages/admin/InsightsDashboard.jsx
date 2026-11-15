@@ -67,7 +67,10 @@ export default function InsightsDashboard() {
             ))}
           </div>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-[var(--accent-primary)] transition-all">
+        <button 
+          onClick={() => window.open(`${API_BASE_URL}/api/admin/insights/export-csv`, '_blank')}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-all active:scale-95 cursor-pointer"
+        >
           <Download size={14} />
           Export CSV
         </button>
