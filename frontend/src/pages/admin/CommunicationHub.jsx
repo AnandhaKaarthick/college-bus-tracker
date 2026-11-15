@@ -2,10 +2,25 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Bell, AlertCircle, 
   Send, Navigation, Phone, 
-  ShieldAlert, CheckCircle2, Check
+  ShieldAlert, CheckCircle2, Check, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL, WS_BASE_URL } from '../../config';
+
+function formatRelativeTime(dateString) {
+  if (!dateString) return "Just now";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Recently";
+    const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (diffSec < 60 && diffSec >= 0) return "Just now";
+    if (diffSec < 3600 && diffSec >= 60) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400 && diffSec >= 3600) return `${Math.floor(diffSec / 3600)}h ago`;
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch {
+    return "Today";
+  }
+}
 
 const MOCK_SOS = {
   id: null,
@@ -271,8 +286,9 @@ function AnnouncementPanel() {
                     </span>
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mb-3">{item.message}</p>
-                  <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
-                    {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Admin John
+                  <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-1.5">
+                    <Clock size={11} className="text-cyan-500" />
+                    <span>{formatRelativeTime(item.created_at)} • Admin John</span>
                   </div>
                 </div>
               </div>

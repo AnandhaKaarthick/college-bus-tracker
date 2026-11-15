@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL, WS_BASE_URL } from '../../config';
 
+function formatAlertTime(dateString) {
+  if (!dateString) return "Just now";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Recently";
+    const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (diffSec < 60 && diffSec >= 0) return "Just now";
+    if (diffSec < 3600 && diffSec >= 60) return `${Math.floor(diffSec / 60)} min ago`;
+    if (diffSec < 86400 && diffSec >= 3600) return `${Math.floor(diffSec / 3600)} hr ago`;
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch {
+    return "Today";
+  }
+}
+
 export default function AlertsFeed({ onAlertCountChange }) {
   const [alerts, setAlerts] = useState([]);
   const [cleared, setCleared] = useState(false);
@@ -18,7 +33,7 @@ export default function AlertsFeed({ onAlertCountChange }) {
             icon: isDelay ? "⚠️" : isResolved ? "✅" : "📢",
             pillType: isDelay ? "warning" : isResolved ? "success" : "info",
             title: a.title,
-            desc: `${a.message} · ${new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+            desc: `${a.message} · ${formatAlertTime(a.created_at)}`
           };
         });
         setAlerts(mapped);

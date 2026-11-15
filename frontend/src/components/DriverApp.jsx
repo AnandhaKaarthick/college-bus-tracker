@@ -57,14 +57,21 @@ function playTone(type) {
   }
 }
 
-// Fallback Route 1 Waypoints if offline
-const DEFAULT_ROUTE_STOPS = [
-  { id: 1, name: "Ayapakkam Park Terminal", time: "07:30 AM", expectedStudents: 14, lat: 13.1020, lng: 80.1345 },
-  { id: 2, name: "Ambattur OT Bus Stand", time: "07:45 AM", expectedStudents: 10, lat: 13.1147, lng: 80.1479 },
-  { id: 3, name: "Maduravoyal Junction", time: "08:05 AM", expectedStudents: 8, lat: 13.0645, lng: 80.1596 },
-  { id: 4, name: "Poonamallee Bypass", time: "08:20 AM", expectedStudents: 6, lat: 13.0488, lng: 80.0857 },
-  { id: 5, name: "RIT Chennai — Main Gate", time: "08:35 AM", expectedStudents: 0, lat: 13.0375, lng: 80.0449 }
-];
+// Calculate realistic stop arrival times synchronized to current real time
+function getDynamicTime(offsetMinutes = 0) {
+  const d = new Date(Date.now() + offsetMinutes * 60000);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function getInitialStops() {
+  return [
+    { id: 1, name: "Ayapakkam Park Terminal", time: getDynamicTime(-18), expectedStudents: 14, lat: 13.1020, lng: 80.1345 },
+    { id: 2, name: "Ambattur OT Bus Stand", time: getDynamicTime(-6), expectedStudents: 10, lat: 13.1147, lng: 80.1479 },
+    { id: 3, name: "Maduravoyal Junction", time: getDynamicTime(6), expectedStudents: 8, lat: 13.0645, lng: 80.1596 },
+    { id: 4, name: "Poonamallee Bypass", time: getDynamicTime(18), expectedStudents: 6, lat: 13.0488, lng: 80.0857 },
+    { id: 5, name: "RIT Chennai — Main Gate", time: getDynamicTime(32), expectedStudents: 0, lat: 13.0375, lng: 80.0449 }
+  ];
+}
 
 // Quick delay incident options for 1-tap reporting
 const INCIDENT_PRESETS = [
@@ -88,10 +95,11 @@ export default function DriverApp() {
   const [location, setLocation] = useState({ lat: 13.1020, lng: 80.1345, speed: 0, heading: 90 });
   const [speedKmh, setSpeedKmh] = useState(0);
   const [shiftSeconds, setShiftSeconds] = useState(1450); // ~24 mins initial shift
+  const [wallClock, setWallClock] = useState(new Date());
   const [error, setError] = useState('');
   
   // Route & Stops State
-  const [stops, setStops] = useState(DEFAULT_ROUTE_STOPS);
+  const [stops, setStops] = useState(getInitialStops);
   const [currentStopIdx, setCurrentStopIdx] = useState(2); // Approaching Maduravoyal
   const [arrivedStopId, setArrivedStopId] = useState(null);
   const [stopsProgress, setStopsProgress] = useState(40); // 40% completed
@@ -144,7 +152,7 @@ export default function DriverApp() {
             setStops(targetRoute.stops.map((s, idx) => ({
               id: s.id || idx + 1,
               name: s.name,
-              time: s.expected_arrival || `08:${(idx * 15).toString().padStart(2, '0')} AM`,
+              time: s.expected_arrival || getDynamicTime(idx * 12 - 15),
               expectedStudents: Math.max(4, 12 - idx * 2),
               lat: s.lat,
               lng: s.lng
@@ -203,10 +211,11 @@ export default function DriverApp() {
     return () => { if (ws.readyState === WebSocket.OPEN) ws.close(); };
   }, [assignedBusId, user?.id, soundEnabled]);
 
-  // Shift Timer Interval
+  // Shift Timer & Wall-clock Interval
   useEffect(() => {
     const timer = setInterval(() => {
       setShiftSeconds(prev => prev + 1);
+      setWallClock(new Date());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -521,10 +530,16 @@ export default function DriverApp() {
         {/* Right HUD Controls */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           
-          {/* Shift Elapsed Timer */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs font-black text-slate-300">
+          {/* Live Real-time Wall Clock */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-xs font-black text-cyan-400">
             <Clock size={14} className="text-cyan-400" />
-            <span className="font-mono">{formatShiftTime(shiftSeconds)}</span>
+            <span className="font-mono">{wallClock.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+          </div>
+
+          {/* Shift Elapsed Timer */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-700/80 text-xs font-bold text-slate-400">
+            <span className="text-[10px] uppercase font-black tracking-widest text-slate-500">SHIFT:</span>
+            <span className="font-mono text-slate-300">{formatShiftTime(shiftSeconds)}</span>
           </div>
 
           {/* Sound Toggle */}

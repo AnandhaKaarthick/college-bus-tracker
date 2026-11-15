@@ -4,33 +4,46 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL, WS_BASE_URL } from '../../config';
 
-const MOCK_DELAYS = [
-  {
-    busNumber: 'TN-01-AB-1234',
-    stopName: 'Porur Junction',
-    scheduled: '08:30',
-    actual: '08:42',
-    delta: 12,
-    tag: 'Delayed'
-  },
-  {
-    busNumber: 'TN-01-CD-5678',
-    stopName: 'Main Gate',
-    scheduled: '08:45',
-    actual: '08:47',
-    delta: 2,
-    tag: 'On Time'
-  }
-];
+function getLiveDelays() {
+  const now = new Date();
+  const formatHM = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  return [
+    {
+      busNumber: 'TN-01-AB-1234',
+      stopName: 'Porur Junction',
+      scheduled: formatHM(new Date(now.getTime() - 10 * 60000)),
+      actual: formatHM(new Date(now.getTime() + 2 * 60000)),
+      delta: 12,
+      tag: 'Delayed'
+    },
+    {
+      busNumber: 'TN-01-CD-5678',
+      stopName: 'Main Gate',
+      scheduled: formatHM(new Date(now.getTime() + 5 * 60000)),
+      actual: formatHM(new Date(now.getTime() + 7 * 60000)),
+      delta: 2,
+      tag: 'On Time'
+    }
+  ];
+}
 
 export default function ScheduleManager() {
   const [routes, setRoutes] = useState([]);
   const [selectedRouteId, setSelectedRouteId] = useState('');
   const [scheduleData, setScheduleData] = useState([]);
-  const [delayData] = useState(MOCK_DELAYS);
+  const [delayData, setDelayData] = useState(getLiveDelays);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+      setDelayData(getLiveDelays());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleCommitChanges = async () => {
     if (!selectedRouteId || scheduleData.length === 0) return;
@@ -96,12 +109,17 @@ export default function ScheduleManager() {
     if (routeId) {
       const route = routes.find(r => r.id === routeId);
       if (route) {
-        const schedule = route.stops.map((stop, index) => ({
-          id: stop.id,
-          name: stop.name,
-          order: index + 1,
-          time: `08:${(index * 15).toString().padStart(2, '0')}`
-        }));
+        const schedule = route.stops.map((stop, index) => {
+          const stopDate = new Date(Date.now() + (index * 15 - 15) * 60000);
+          const hh = stopDate.getHours().toString().padStart(2, '0');
+          const mm = stopDate.getMinutes().toString().padStart(2, '0');
+          return {
+            id: stop.id,
+            name: stop.name,
+            order: index + 1,
+            time: `${hh}:${mm}`
+          };
+        });
         setScheduleData(schedule);
       } else {
         setScheduleData([]);
@@ -123,9 +141,22 @@ export default function ScheduleManager() {
 
   return (
     <div className="flex-1 flex flex-col bg-[var(--bg-primary)] overflow-hidden">
-      <div className="p-4 sm:p-6 md:p-8 border-b border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
-        <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase mb-1 sm:mb-2">Schedule Manager</h2>
-        <p className="text-xs sm:text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest">Delay Engine & Route Timetables</p>
+      <div className="p-4 sm:p-6 md:p-8 border-b border-[var(--border)] bg-[var(--bg-secondary)] shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase mb-1 sm:mb-2">Schedule Manager</h2>
+          <p className="text-xs sm:text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest">Delay Engine & Route Timetables</p>
+        </div>
+        <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border)] self-start sm:self-auto shadow-sm">
+          <Clock size={16} className="text-[var(--accent-primary)] animate-pulse shrink-0" />
+          <div>
+            <div className="font-mono text-sm font-black text-[var(--text-primary)]">
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+            </div>
+            <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+              Live Fleet Synchronizer
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">

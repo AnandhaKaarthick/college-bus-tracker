@@ -29,6 +29,12 @@ function StepperNode({ status }) {
   return <div className="w-3 h-3 rounded-full border-2 border-[var(--border)] bg-[var(--bg-secondary)] z-10"></div>;
 }
 
+function getPastArrivalTime(index, totalPassed = 3) {
+  const minutesAgo = Math.max(2, (totalPassed - index) * 8);
+  const d = new Date(Date.now() - minutesAgo * 60000);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
 export default function StopStepper({ stops, studentLocation, onStopTap }) {
   if (!stops || stops.length === 0) return null;
 
@@ -110,7 +116,7 @@ function StopStepperRow({ stop, status, eta, onTap }) {
             textTransform: "uppercase",
           }}>
             {isPassed
-              ? (stop.arrival_time || "07:00") // Mock past time
+              ? (stop.arrival_time || getPastArrivalTime(index))
               : isNext
               ? "NEXT"
               : eta ? `~${eta}m` : ""}

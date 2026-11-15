@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import MyBusCard from "../components/dashboard/MyBusCard";
@@ -18,7 +19,12 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { activeBusCount, studentsBoardedCount } = useBusContext();
-  const hour = new Date().getHours();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <motion.div 
@@ -33,16 +39,30 @@ export default function Dashboard() {
       <div className="px-4 md:px-8 pt-6 pb-6 flex flex-col gap-6"
         style={{ background: "var(--bg-primary)" }}>
 
-        {/* Greeting */}
-        <div className="mb-2">
-          <h2 style={{ fontFamily: "var(--font-headline)", fontSize: 24,
-                       fontWeight: 700, color: "var(--text-primary)" }}>
-            {getGreeting(user?.name || "Student", hour)}
-          </h2>
-          <p style={{ fontFamily: "var(--font-body)", fontSize: 14,
-                      color: "var(--text-muted)", marginTop: "4px" }}>
-            Here is your campus commute status for today.
-          </p>
+        {/* Greeting & Live Clock Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+          <div>
+            <h2 style={{ fontFamily: "var(--font-headline)", fontSize: 24,
+                         fontWeight: 700, color: "var(--text-primary)" }}>
+              {getGreeting(user?.name || "Student", currentTime.getHours())}
+            </h2>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 14,
+                        color: "var(--text-muted)", marginTop: "4px" }}>
+              Here is your campus commute status for today.
+            </p>
+          </div>
+
+          <div className="self-start sm:self-auto px-4 py-2 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border)] shadow-sm flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <div>
+              <div className="font-mono text-sm font-black text-[var(--text-primary)]">
+                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+              </div>
+              <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 2-Column Grid Layout for Desktop */}

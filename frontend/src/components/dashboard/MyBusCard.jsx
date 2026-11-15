@@ -2,12 +2,25 @@ import { useNavigate } from "react-router-dom";
 import { Phone, ArrowRight } from "lucide-react";
 import { useBusContext } from "../../context/BusContext";
 
+function getNextDepartureText() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  if (currentHour < 8) {
+    return `Today at 08:00 AM`;
+  } else if (currentHour < 18) {
+    const nextSlot = new Date(now.getTime() + 25 * 60000);
+    return `Today at ${nextSlot.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+  } else {
+    return `Tomorrow at 07:30 AM`;
+  }
+}
+
 function NoBusCard() {
   const navigate = useNavigate();
   return (
     <div className="card text-center py-8 flex flex-col items-center justify-center">
       <p className="text-[var(--text-primary)] font-semibold mb-2">No bus scheduled right now</p>
-      <p className="text-[var(--text-muted)] text-sm mb-4">Next departure: Tomorrow at 07:00 AM</p>
+      <p className="text-[var(--text-muted)] text-sm mb-4">Next departure: {getNextDepartureText()}</p>
       <button onClick={() => navigate("/map")} className="btn-secondary">
         Browse All Routes
       </button>

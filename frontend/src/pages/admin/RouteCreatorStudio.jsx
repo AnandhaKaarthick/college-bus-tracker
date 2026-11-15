@@ -282,7 +282,7 @@ export default function RouteCreatorStudio() {
           lat: s.lat,
           lng: s.lng,
           order: idx + 1,
-          expected_arrival: s.expected_arrival || "08:00"
+          expected_arrival: s.expected_arrival || new Date(Date.now() + idx * 15 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
         })),
         polyline: snappedPolyline
       };
