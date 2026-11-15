@@ -27,8 +27,8 @@ export default function RouteGrid({ routes, selectedRouteId, onRouteSelect, onDe
       </button>
 
       {routes.map(route => {
-        const isActive = selectedRouteId === route.id;
-        const activeBuses = buses.filter(b => b.route_id === route.id && b.status === 'on_track').length;
+        const isActive = selectedRouteId !== null && String(selectedRouteId) === String(route.id);
+        const activeBuses = buses.filter(b => String(b.route_id) === String(route.id) && b.status !== 'inactive' && b.status !== 'offline').length;
         
         return (
           <div

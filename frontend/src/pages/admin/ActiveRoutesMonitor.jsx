@@ -17,42 +17,60 @@ export default function ActiveRoutesMonitor() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [mobileTab, setMobileTab] = useState('map'); // 'map' or 'routes'
 
-  const fetchRoutes = async () => {
+  const fetchFleetData = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/routes`);
-      if (res.ok) {
-        const data = await res.json();
-        setRoutes(data.routes);
+      const [routesRes, busesRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/routes`),
+        fetch(`${API_BASE_URL}/api/buses`)
+      ]);
+      if (routesRes.ok) {
+        const data = await routesRes.json();
+        setRoutes(Array.isArray(data.routes) ? data.routes : []);
+      }
+      if (busesRes.ok) {
+        const bData = await busesRes.json();
+        const busesList = Array.isArray(bData.buses) ? bData.buses : [];
+        const busesMap = {};
+        busesList.forEach(b => {
+          busesMap[String(b.bus_id)] = b;
+        });
+        setBuses(busesMap);
       }
       setIsLoading(false);
     } catch (err) {
-      console.error("Error fetching routes:", err);
+      console.error("Error fetching fleet data:", err);
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRoutes();
+    fetchFleetData();
 
     // WebSocket for live bus positions and route changes
-    const ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'bus_position') {
-          setBuses(prev => ({
-            ...prev,
-            [msg.bus_id]: { ...prev[msg.bus_id], ...msg }
-          }));
-        } else if (msg.type === 'route_created' || msg.type === 'route_deleted') {
-          fetchRoutes();
+    let ws;
+    try {
+      ws = new WebSocket(`${WS_BASE_URL}/ws/buses`);
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'bus_position') {
+            setBuses(prev => ({
+              ...prev,
+              [String(msg.bus_id)]: { ...(prev[String(msg.bus_id)] || {}), ...msg }
+            }));
+          } else if (msg.type === 'route_created' || msg.type === 'route_deleted') {
+            fetchFleetData();
+          }
+        } catch (e) {
+          console.error("WS error in monitor:", e);
         }
-      } catch (e) {
-        console.error("WS error in monitor:", e);
-      }
-    };
+      };
+    } catch (wsErr) {
+      console.warn("WebSocket initialization skipped:", wsErr);
+    }
+
     return () => {
-      if (ws.readyState === WebSocket.OPEN) ws.close();
+      if (ws && ws.readyState === WebSocket.OPEN) ws.close();
     };
   }, []);
 
