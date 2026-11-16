@@ -324,6 +324,13 @@ async def create_route(payload: RouteCreateInput, db: Session = Depends(get_db))
         if bus:
             bus.route_id = new_route.id
             assigned_bus_name = bus.name
+            
+            # Automatically assign drivers and students linked to this bus
+            users_linked = db.query(models.User).filter(models.User.assigned_bus_id == bus.id).all()
+            for u in users_linked:
+                u.assigned_route_id = new_route.id
+                if u.role == 'student' and created_stops:
+                    u.assigned_stop_id = created_stops[0].id
     
     db.commit()
     
@@ -405,6 +412,57 @@ async def delete_route(route_id: int, db: Session = Depends(get_db)):
         "route_id": route_id
     }))
     return {"status": "success", "route_id": route_id}
+
+@app.post("/api/admin/routes/clear-all-dummy")
+async def clear_all_dummy_routes(db: Session = Depends(get_db)):
+    try:
+        db.query(models.StopArrival).delete()
+    except Exception:
+        pass
+    try:
+        db.query(models.RouteSchedule).delete()
+    except Exception:
+        pass
+    try:
+        db.query(models.Stop).delete()
+    except Exception:
+        pass
+    
+    # Delete all routes
+    deleted_count = db.query(models.Route).delete()
+    
+    # Reset buses & positions
+    buses = db.query(models.Bus).all()
+    for b in buses:
+        b.route_id = None
+        b.status = "offline"
+    db.query(models.BusLivePosition).delete()
+    
+    # Reset user assignments
+    users = db.query(models.User).filter(models.User.role != 'admin').all()
+    for u in users:
+        u.assigned_route_id = None
+        u.assigned_stop_id = None
+        
+    db.commit()
+    
+    # Reset routes_geometry.json
+    try:
+        geom_file = os.path.join(os.path.dirname(__file__), "routes_geometry.json")
+        with open(geom_file, "w", encoding="utf-8") as gf:
+            json.dump({}, gf)
+    except Exception as e:
+        print("Note on routes_geometry.json:", e)
+        
+    await manager.broadcast(json.dumps({
+        "type": "route_deleted",
+        "route_id": "all"
+    }))
+    
+    return {
+        "status": "success",
+        "message": f"Successfully cleared {deleted_count} dummy routes. Ready for live physical testing."
+    }
 
 
 @app.get("/api/admin/buses")

@@ -64,13 +64,7 @@ function getDynamicTime(offsetMinutes = 0) {
 }
 
 function getInitialStops() {
-  return [
-    { id: 1, name: "Ayapakkam Park Terminal", time: getDynamicTime(-18), expectedStudents: 14, lat: 13.1020, lng: 80.1345 },
-    { id: 2, name: "Ambattur OT Bus Stand", time: getDynamicTime(-6), expectedStudents: 10, lat: 13.1147, lng: 80.1479 },
-    { id: 3, name: "Maduravoyal Junction", time: getDynamicTime(6), expectedStudents: 8, lat: 13.0645, lng: 80.1596 },
-    { id: 4, name: "Poonamallee Bypass", time: getDynamicTime(18), expectedStudents: 6, lat: 13.0488, lng: 80.0857 },
-    { id: 5, name: "RIT Chennai — Main Gate", time: getDynamicTime(32), expectedStudents: 0, lat: 13.0375, lng: 80.0449 }
-  ];
+  return [];
 }
 
 // Quick delay incident options for 1-tap reporting
@@ -88,12 +82,15 @@ export default function DriverApp() {
   // Navigation & Control States
   const [activeTab, setActiveTab] = useState('cockpit'); // 'cockpit', 'route', 'dispatch', 'vehicle'
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [simMode, setSimMode] = useState(true); // Default to simulation mode for seamless presentation demo
+  const [simMode, setSimMode] = useState(false); // Default to Phone GPS for real-world testing
   const [soundEnabled, setSoundEnabled] = useState(true);
   
   // Telemetry & GPS State
   const [location, setLocation] = useState({ lat: 13.1020, lng: 80.1345, speed: 0, heading: 90 });
   const [speedKmh, setSpeedKmh] = useState(0);
+  const [gpsAccuracy, setGpsAccuracy] = useState(null);
+  const [gpsStatus, setGpsStatus] = useState('idle'); // 'idle', 'acquiring', 'locked', 'error'
+  const [gpsLastUpdate, setGpsLastUpdate] = useState(null);
   const [shiftSeconds, setShiftSeconds] = useState(1450); // ~24 mins initial shift
   const [wallClock, setWallClock] = useState(new Date());
   const [error, setError] = useState('');
@@ -136,9 +133,10 @@ export default function DriverApp() {
   const routeWaypointsRef = useRef([]);
 
   const assignedBusId = user?.assigned_bus_id || '1';
-  const busName = user?.assigned_bus_name || 'Bus 04';
-  const vehicleNumber = user?.vehicle_number || 'TN 09 AB 1234';
-  const routeName = user?.assigned_route_name || 'Ayapakkam → RIT Express';
+  const busName = user?.assigned_bus_name || 'Bus 01';
+  const vehicleNumber = user?.vehicle_number || 'TN-09-RIT-0001';
+  const [activeRouteName, setActiveRouteName] = useState(user?.assigned_route_name || '');
+  const routeName = activeRouteName || user?.assigned_route_name || 'Transit Route';
 
   // Load Route Data & Timetable from backend
   useEffect(() => {
@@ -148,15 +146,23 @@ export default function DriverApp() {
         if (res.ok) {
           const data = await res.json();
           const targetRoute = data.routes?.find(r => String(r.bus_id) === String(assignedBusId) || String(r.id) === String(user?.assigned_route_id || '1')) || data.routes?.[0];
-          if (targetRoute && targetRoute.stops && targetRoute.stops.length > 0) {
-            setStops(targetRoute.stops.map((s, idx) => ({
-              id: s.id || idx + 1,
-              name: s.name,
-              time: s.expected_arrival || getDynamicTime(idx * 12 - 15),
-              expectedStudents: Math.max(4, 12 - idx * 2),
-              lat: s.lat,
-              lng: s.lng
-            })));
+          if (targetRoute) {
+            setActiveRouteName(targetRoute.name);
+            if (targetRoute.stops && targetRoute.stops.length > 0) {
+              setStops(targetRoute.stops.map((s, idx) => ({
+                id: s.id || idx + 1,
+                name: s.name,
+                time: s.expected_arrival || getDynamicTime(idx * 12 - 15),
+                expectedStudents: Math.max(4, 12 - idx * 2),
+                lat: s.lat,
+                lng: s.lng
+              })));
+            } else {
+              setStops([]);
+            }
+          } else {
+            setActiveRouteName('No Active Route Configured');
+            setStops([]);
           }
         }
       } catch (err) {
@@ -253,6 +259,7 @@ export default function DriverApp() {
       // STOP TRIP
       setIsBroadcasting(false);
       setSpeedKmh(0);
+      setGpsStatus('idle');
       if (simTimerRef.current) clearInterval(simTimerRef.current);
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       if (soundEnabled) playTone('stop');
@@ -268,6 +275,7 @@ export default function DriverApp() {
 
       if (simMode) {
         // SIMULATION AUTO-DRIVE MODE (Ideal for demos, presentations & testing)
+        setGpsStatus('locked');
         let step = 0;
         // Generate realistic highway route interpolations between stops
         const waypoints = [
@@ -284,6 +292,7 @@ export default function DriverApp() {
           const mockSpeed = Math.floor(36 + Math.random() * 12);
           setSpeedKmh(mockSpeed);
           setLocation({ lat, lng, speed: mockSpeed, heading: 90 });
+          setGpsLastUpdate(new Date());
           sendLocationUpdate(lat, lng, mockSpeed, 90);
 
           // Update route progress
@@ -294,29 +303,47 @@ export default function DriverApp() {
       } else {
         // REAL DEVICE HARDWARE GPS MODE
         if (!navigator.geolocation) {
-          setError('GPS hardware not detected on this device');
+          setError('GPS hardware or Geolocation API not supported on this browser/device');
+          setGpsStatus('error');
           setIsBroadcasting(false);
           return;
         }
 
+        setGpsStatus('acquiring');
         watchIdRef.current = navigator.geolocation.watchPosition(
           (pos) => {
-            const rawSpeed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(0) : Math.floor(35 + Math.random() * 8);
+            const rawSpeed = pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed >= 0
+              ? Math.round(pos.coords.speed * 3.6)
+              : 0;
             const newLoc = {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
+              lat: Number(pos.coords.latitude.toFixed(6)),
+              lng: Number(pos.coords.longitude.toFixed(6)),
               speed: Number(rawSpeed),
               heading: pos.coords.heading || 90
             };
+            const accuracyM = Math.round(pos.coords.accuracy || 0);
             setLocation(newLoc);
             setSpeedKmh(newLoc.speed);
+            setGpsAccuracy(accuracyM);
+            setGpsStatus('locked');
+            setGpsLastUpdate(new Date());
             sendLocationUpdate(newLoc.lat, newLoc.lng, newLoc.speed, newLoc.heading);
           },
           (err) => {
-            setError(err.message);
+            console.error("GPS Watch error:", err);
+            setGpsStatus('error');
+            let friendlyError = err.message;
+            if (err.code === 1) {
+              friendlyError = 'Permission denied: Please allow Location Access in your browser settings to broadcast live GPS.';
+            } else if (err.code === 2) {
+              friendlyError = 'Position unavailable: Please turn on Device Location / GPS in system settings.';
+            } else if (err.code === 3) {
+              friendlyError = 'GPS acquisition timeout: Searching for satellite signal...';
+            }
+            setError(friendlyError);
             setIsBroadcasting(false);
           },
-          { enableHighAccuracy: true, maximumAge: 3000, timeout: 8000 }
+          { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
         );
       }
     }
@@ -481,7 +508,12 @@ export default function DriverApp() {
     }, 6000);
   };
 
-  const nextStop = stops[currentStopIdx] || stops[stops.length - 1];
+  const nextStop = stops[currentStopIdx] || stops[stops.length - 1] || { 
+    id: 0, 
+    name: "Awaiting Route Stops", 
+    time: "--:--", 
+    expectedStudents: 0 
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans selection:bg-cyan-500/30">
@@ -677,6 +709,48 @@ export default function DriverApp() {
                   </button>
                 </div>
               </div>
+
+              {/* LIVE TELEMETRY & GPS SENSOR STATUS STRIP */}
+              <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${
+                    !simMode && isBroadcasting && gpsStatus === 'locked'
+                      ? 'bg-emerald-400 animate-ping'
+                      : isBroadcasting
+                      ? 'bg-cyan-400 animate-pulse'
+                      : 'bg-slate-600'
+                  }`} />
+                  <span className="font-mono text-slate-300 font-bold">
+                    {simMode 
+                      ? 'SIMULATION SENSOR: Auto-drive Waypoints active'
+                      : gpsStatus === 'locked'
+                      ? `HARDWARE GPS LOCKED: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
+                      : gpsStatus === 'acquiring'
+                      ? 'ACQUIRING HARDWARE GPS SATELLITES...'
+                      : isBroadcasting
+                      ? 'PHONE GPS READY'
+                      : 'STANDBY — Set to "Phone GPS" to broadcast your physical device coordinates'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400">
+                  {!simMode && gpsAccuracy !== null && (
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono">
+                      ACCURACY: ±{gpsAccuracy}m
+                    </span>
+                  )}
+                  {gpsLastUpdate && (
+                    <span className="font-mono text-slate-500 hidden sm:inline">
+                      TICK: {gpsLastUpdate.toLocaleTimeString()}
+                    </span>
+                  )}
+                  <span className={`px-2 py-0.5 rounded uppercase tracking-widest text-[9px] font-black ${
+                    !simMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {!simMode ? '🛰️ PHONE GPS' : '🎮 DEMO SIM'}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* 2. NEXT STOP ARRIVAL BANNER (Prominent High-Contrast Navigator) */}
@@ -687,26 +761,26 @@ export default function DriverApp() {
                 </div>
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
-                    <span>NEXT SCHEDULED STOP • #{currentStopIdx + 1} OF {stops.length}</span>
+                    <span>NEXT SCHEDULED STOP • #{stops.length > 0 ? currentStopIdx + 1 : 0} OF {stops.length}</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                     <span>ETA ~4 MINS</span>
                   </div>
                   <h4 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tight mt-0.5">
-                    {nextStop.name}
+                    {nextStop?.name || "Awaiting Route Stops"}
                   </h4>
                   <p className="text-xs font-bold text-slate-400">
-                    Scheduled Time: <span className="text-white">{nextStop.time}</span> • Approx. <span className="text-cyan-300 font-extrabold">+{nextStop.expectedStudents} students</span> waiting
+                    Scheduled Time: <span className="text-white">{nextStop?.time || "--:--"}</span> • Approx. <span className="text-cyan-300 font-extrabold">+{nextStop?.expectedStudents || 0} students</span> waiting
                   </p>
                 </div>
               </div>
 
               <button
                 onClick={handleMarkStopArrived}
-                disabled={arrivedStopId !== null}
+                disabled={arrivedStopId !== null || stops.length === 0}
                 className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
               >
                 <Check size={18} />
-                <span>{arrivedStopId ? 'ARRIVING...' : 'MARK STOP ARRIVED'}</span>
+                <span>{stops.length === 0 ? 'NO STOPS' : arrivedStopId ? 'ARRIVING...' : 'MARK STOP ARRIVED'}</span>
               </button>
             </div>
 
@@ -862,8 +936,19 @@ export default function DriverApp() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              {stops.map((stop, idx) => {
+            {stops.length === 0 ? (
+              <div className="bg-slate-900/60 p-12 rounded-3xl border border-slate-800 text-center space-y-3">
+                <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mx-auto">
+                  <MapPin size={28} />
+                </div>
+                <h4 className="text-lg font-black text-white uppercase tracking-tight">No Route Stops Configured</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  Create and assign your real transit route in Route Creator Studio (/admin/routes) to view stops, sequence and ETAs.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stops.map((stop, idx) => {
                 const isPassed = idx < currentStopIdx;
                 const isCurrent = idx === currentStopIdx;
                 return (
@@ -925,6 +1010,7 @@ export default function DriverApp() {
                 );
               })}
             </div>
+            )}
           </div>
         )}
 
